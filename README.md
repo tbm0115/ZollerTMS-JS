@@ -49,20 +49,20 @@ It is recommended to mostly interface with the first set of objects as they will
 
 You can test the library quickly from your Web Browser's console. Consider we have a Setting Sheet in the Zoller TMS with an ID of **84**. Setting Sheet **84** has two Tools with Id's **T1** and **T2**:
 
-```
+```javascript
 >> var ss = new ZollerSettingSheet("84");
 >> console.log(ss);
 ```
 
 You'll notice that the declaration of *ss* will result in a list of node names from the raw XML if your Web Method is properly setup and the *console.log(ss)* command should yield a result similar to the following:
 
-```
+```javascript
 << Object { SetXML: ZollerSettingSheet/this.SetXML(), XML: XMLDocument, SettingSheetId: "84", Name: "1-2-3 BLOCK", WorkStep: "101", Images: Array[2], Tools: Array[2], Documents: Array[2], Machine: Object, AddTool: ZollerSettingSheet/this.AddTool() }
 ```
 
 The key things to note are the objects within the **ZollerSettingSheet** object, the *SettingSheetId* equals the Id we provided and the *Tools* array has two items. If we reference the first item in the console we'll get the following results:
 
-```
+```javascript
 >> ss.Tools[0]
 << Object { SetXML: ZollerTool/this.SetXML(), XML: <Tool>, ToolId: "T1", Description: "2'' Gold Quad 5 FL", CharacteristicStructures: Array[1], Images: Array[2], SingleComponents: Array[3], Accessories: Array[2], Documents: Array[2], SVG: "&lt;?xml version="1.0"?&gt; &lt;svg…", 1 more… }
 ```
