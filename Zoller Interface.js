@@ -37,9 +37,9 @@
 // **************************************************************************
 
 var graphicSuffixes = ["", "1", "2", "3", "4", "5", "6", "7", "8"]; // Graphic suffixes
-var _imageLargePreviewSize = {width: 150,height: 150};
-var _imageMediumPreviewSize = {width: 75,height: 75};
-var _imageSmallPreviewSize = {width: 50,height: 50};
+var _imageLargePreviewSize = { width: 150, height: 150 };
+var _imageMediumPreviewSize = { width: 75, height: 75 };
+var _imageSmallPreviewSize = { width: 50, height: 50 };
 
 
 // **************************************************************************
@@ -71,13 +71,12 @@ function ZollerAdapter(id) {
   var nodeAdapter;
   if ((typeof id) == "string") {
     this.XML = _WebRequest("GET", "Adapter/" + id + "?LoadSubData=true", this.SetXML);
-    nodeAdapter = this.XML.children[0].children[1].children[0];
   } else if ((typeof id) == "object") {
     this.SetXML(id);
-    nodeAdapter = this.XML;
   } else {
     console.log("Invalid object type!");
   }
+	nodeAdapter = getNodeByTagName(this.XML, "Adapter");
 
   this.AdapterId = getValue(nodeAdapter, "AdapterId");
   this.Name = getValue(nodeAdapter, "Name");// Grabbing the global value is okay because it only returns the first instance of the object
@@ -121,13 +120,12 @@ function ZollerMachine(id) {
   var nodeMachine;
   if ((typeof id) == "string") {
     this.XML = _WebRequest("GET", "Machine/" + id + "?LoadSubData=true", this.SetXML);
-    nodeMachine = this.XML.children[0].children[1].children[0];
   } else if ((typeof id) == "object") {
     this.SetXML(id);
-    nodeMachine = this.XML;
   } else {
     console.log("Invalid object type!");
   }
+	nodeMachine = getNodeByTagName(this.XML, "Machine");
 
 
   this.MachineId = getValue(nodeMachine, "MachineId");// Grabbing the global value is okay because it only returns the first instance of the object
@@ -237,13 +235,12 @@ function ZollerSettingSheet(id) {
   var nodeSettingSheet;
   if ((typeof id) == "string") {
     this.XML = _WebRequest("GET", "SettingSheet/" + id + "?LoadSubData=true", this.SetXML);
-    nodeSettingSheet = this.XML.children[0].children[1].children[0];
   } else if ((typeof id) == "object") {
     this.SetXML(id);
-    nodeSettingSheet = this.XML;
   } else {
     console.log("Invalid object type!");
   }
+	nodeSettingSheet = getNodeByTagName(this.XML, "SettingSheet");
 
   this.SettingSheetId = getValue(nodeSettingSheet, "SettingSheetId");
   this.Name = getValue(nodeSettingSheet, "Name");// Grabbing the global value is okay because it only returns the first instance of the object
@@ -295,53 +292,10 @@ function ZollerSettingSheet(id) {
     }
   }
 
-  this.AddTool = function (tool) {
-    // Find the tool list
-    var blnAdded = false;
-    if (getNodes(this.XML, "ToolList").length > 0) {
-      var tlList, tlInList, tlNode, tlRef, tlPos;
-      tlList = getNodes(this.XML, "ToolList")[0];
-      if (this.Tools.length > 0) {
-        tlList.innerHTML = "";
-        for (var len = this.Tools.length, n = 0; n < len; n++) {
-          tlInList = this.XML.createElement("ToolInList");
-          tlNode = this.XML.createElement("Tool");
-          tlRef = this.XML.createElement("ToolId");
-          tlPos = this.XML.createElement("Position");
-          tlPos.innerHTML = n;
-          tlRef.innerHTML = this.Tools[n].ToolId;
-          tlNode.appendChild(tlRef);
-          tlInList.appendChild(tlPos);
-          tlInList.appendChild(tlNode);
-          tlList.appendChild(tlInList);
-        }
-      }
-      tlInList = this.XML.createElement("ToolInList"); // ToolList/ToolInList
-      tlNode = this.XML.createElement("Tool"); // ToolList/ToolInList/Tool
-      tlRef = this.XML.createElement("ToolId"); // ToolList/ToolInList/Tool/ToolId
-      tlPos = this.XML.createElement("Position"); // ToolList/ToolInList/Position
-      tlPos.innerHTML = this.Tools.length + 1;
-      tlRef.innerHTML = tool.ToolId;
-      tlNode.appendChild(tlRef);
-      tlInList.appendChild(tlPos);
-      tlInList.appendChild(tlNode);
-      tlList.appendChild(tlInList);
-      blnAdded = true;
-    }
-    if (blnAdded) {
-      // Send Update request with new data and avoid accidentall leaving out data
-      _WebRequest("PUT", "SettingSheet/" + this.SettingSheetId + "?overwriteAll=false", function (xml) {
-        console.log("Update response: ", xml);
-      }, _XMLDeclaration + "<Data>" + decodeURI(this.XML.children[0].children[1].innerHTML) + "</Data>");
-    } else {
-      console.log("Tool XML Structure not added to Setting Sheet.");
-    }
+  this.DrawHTML = function (parent) {
+    var tmpHTML = new HTMLSettingSheet(this);
+    parent.innerHTML = tmpHTML.GetMarkup();
   }
-
-	this.DrawHTML = function(parent){
-		var tmpHTML = new HTMLSettingSheet(this);
-		parent.innerHTML = tmpHTML.GetMarkup();
-	}
 }
 
 function ZollerTool(id) {
@@ -362,13 +316,12 @@ function ZollerTool(id) {
   var nodeTool;
   if ((typeof id) == "string") {
     this.XML = _WebRequest("GET", "Tool/" + id + "?LoadSubData=true", this.SetXML);
-    nodeTool = this.XML.children[0].children[1].children[0];
   } else if ((typeof id) == "object") {
     this.SetXML(id);
-    nodeTool = this.XML;
   } else {
     console.log("Invalid object type!");
   }
+	nodeTool = getNodeByTagName(this.XML, "Tool");
 
   this.ToolId = getValue(nodeTool, "ToolId");
   this.Description = getValue(nodeTool, "Description");// Grabbing the global value is okay because it only returns the first instance of the object
@@ -427,55 +380,12 @@ function ZollerTool(id) {
   }
 
   // Get the most pertinent SVG data if available.
-  this.SVG = getValue(this.XML, "ScalableVectorGraphic");
+  this.SVG = getValue(nodeTool, "ScalableVectorGraphic");
 
-  this.AddComponent = function (component) {
-    // Find the tool list
-    var blnAdded = false;
-    if (getNodes(this.XML, "ComponentList").length > 0) {
-      var tlList, tlInList, tlNode, tlRef, tlPos;
-      tlList = getNodes(this.XML, "ComponentList")[0];
-      if (this.Components.length > 0) {
-        tlList.innerHTML = "";
-        for (var len = this.Components.length, n = 0; n < len; n++) {
-          tlInList = this.XML.createElement("ComponentInList");
-          tlNode = this.XML.createElement("Component");
-          tlRef = this.XML.createElement("ComponentId");
-          tlPos = this.XML.createElement("Position");
-          tlPos.innerHTML = n;
-          tlRef.innerHTML = this.Components[n].ComponentId;
-          tlNode.appendChild(tlRef);
-          tlInList.appendChild(tlPos);
-          tlInList.appendChild(tlNode);
-          tlList.appendChild(tlInList);
-        }
-      }
-      tlInList = this.XML.createElement("ComponentInList"); // ComponentList/ComponentInList
-      tlNode = this.XML.createElement("Component"); // ComponentList/ComponentInList/Component
-      tlRef = this.XML.createElement("ComponentId"); // ComponentList/ComponentInList/Component/ComponentId
-      tlPos = this.XML.createElement("Position"); // ComponentList/ComponentInList/Position
-      tlPos.innerHTML = this.Components.length + 1;
-      tlRef.innerHTML = component.ComponentId;
-      tlNode.appendChild(tlRef);
-      tlInList.appendChild(tlPos);
-      tlInList.appendChild(tlNode);
-      tlList.appendChild(tlInList);
-      blnAdded = true;
-    }
-    if (blnAdded) {
-      // Send Update request with new data and avoid accidentall leaving out data
-      _WebRequest("PUT", "Tool/" + this.ToolId + "?overwriteAll=false", function (xml) {
-        console.log("Update response: ", xml);
-      }, _XMLDeclaration + "<Data>" + decodeURI(this.XML.children[0].children[1].innerHTML) + "</Data>");
-    } else {
-      console.log("Component XML Structure not added to Tool.");
-    }
+  this.DrawHTML = function (parent) {
+    var tmpHTML = new HTMLTool(this);
+    parent.innerHTML = tmpHTML.GetMarkup();
   }
-
-	this.DrawHTML = function(parent){
-		var tmpHTML = new HTMLTool(this);
-		parent.innerHTML = tmpHTML.GetMarkup();
-	}
 }
 
 function ZollerSingleComponent(id) {
@@ -496,13 +406,12 @@ function ZollerSingleComponent(id) {
   var nodeComponent;
   if ((typeof id) == "string") {
     this.XML = _WebRequest("GET", "Component/" + id + "?LoadSubData=true", this.SetXML);
-    nodeComponent = this.XML.children[0].children[1].children[0];
   } else if ((typeof id) == "object") {
     this.SetXML(id);
-    nodeComponent = this.XML;
   } else {
     console.log("Invalid object type!");
   }
+	nodeComponent = getNodeByTagName(this.XML, "SingleComponent");
 
   this.ComponentId = getValue(nodeComponent, "ComponentId");
 
@@ -552,23 +461,23 @@ function ZollerSingleComponent(id) {
   }
 
   // Get the most pertinent SVG data if available.
-  this.SVG = getValue(this.XML, "ScalableVectorGraphic");
-	
-	this.DrawHTML = function(parent){
-		var tmpHTML = new HTMLSingleComponent(this);
-		parent.innerHTML = tmpHTML.GetMarkup();
-	}
-	this.GetPreview = function(){
-		var out = "<div class='preview singleComponent'>";
-		if (this.Images.length > 0){
-			out += "<a target='_blank' href='" + this.Images[0].ImageURL + "'>" + this.Images[0].Image.outerHTML + "</a>";
-		}else{
-			out += "<span class='graphic'>No Preview</span>";
-		}
-		out += "<span class='componentId'>" + this.ComponentId + "</span>";
-		out += "<span class='description'>" + this.Description + "</span></div>";
-		return out;
-	}
+  this.SVG = getValue(nodeComponent, "ScalableVectorGraphic");
+
+  this.DrawHTML = function (parent) {
+    var tmpHTML = new HTMLSingleComponent(this);
+    parent.innerHTML = tmpHTML.GetMarkup();
+  }
+  this.GetPreview = function () {
+    var out = "<div class='preview singleComponent'>";
+    if (this.Images.length > 0) {
+      out += "<a target='_blank' href='" + this.Images[0].ImageURL + "'>" + this.Images[0].Image.outerHTML + "</a>";
+    } else {
+      out += "<span class='graphic'>No Preview</span>";
+    }
+    out += "<span class='componentId'>" + this.ComponentId + "</span>";
+    out += "<span class='description'>" + this.Description + "</span></div>";
+    return out;
+  }
 }
 
 function ZollerAccessory(id) {
@@ -589,13 +498,12 @@ function ZollerAccessory(id) {
   var nodeAccessory;
   if ((typeof id) == "string") {
     this.XML = _WebRequest("GET", "Accessory/" + id + "?LoadSubData=true", this.SetXML);
-    nodeAccessory = this.XML.children[0].children[1].children[0];
   } else if ((typeof id) == "object") {
     this.SetXML(id);
-    nodeAccessory = this.XML;
   } else {
     console.log("Invalid object type!");
   }
+	nodeAccessory = getNodeByTagName(this.XML, "Accessory");
 
   this.AccessoryId = getValue(nodeAccessory, "AccessoryId");
 
@@ -614,91 +522,91 @@ function ZollerAccessory(id) {
 // **************************************************************************
 
 var _ZollerACs = [];
-if (__tdm != undefined){
-	_ZollerACs.push(new ZollerArticleCharacteristicBar(__tdm));
+if (__tdm != undefined) {
+  _ZollerACs.push(new ZollerArticleCharacteristicBar(__tdm));
 }
 
-function ZollerArticleCharacteristicBar(json){
-	this.ID = "";
-	this.Label = "";
-	this.Types = [];
-	if (json != undefined){
-		if (json.id != undefined){this.ID = json.id;}
-		if (json.label != undefined){this.Label = json.label;}
-		if (json.types != undefined){
-			for (var len = json.types.length, n = 0; n < len; n++){
-				this.Types.push(new ZollerArticleCharacteristicType(json.types[n]));
-			}
-		}
-	}
+function ZollerArticleCharacteristicBar(json) {
+  this.ID = "";
+  this.Label = "";
+  this.Types = [];
+  if (json != undefined) {
+    if (json.id != undefined) { this.ID = json.id; }
+    if (json.label != undefined) { this.Label = json.label; }
+    if (json.types != undefined) {
+      for (var len = json.types.length, n = 0; n < len; n++) {
+        this.Types.push(new ZollerArticleCharacteristicType(json.types[n]));
+      }
+    }
+  }
 }
-function ZollerArticleCharacteristicType(json){
-	this.ID = "";
-	this.Label = "";
-	this.Characteristics = [];
-	if (json != undefined){
-		if (json.id != undefined){this.ID = json.id;}
-		if (json.label != undefined){this.Label = json.label;}
-		if (json.characteristics != undefined){
-			for (var len = json.characteristics.length, n = 0; n < len; n++){
-				this.Characteristics.push(new ZollerArticleCharacteristic(json.characteristics[n]));
-			}
-		}
-	}
+function ZollerArticleCharacteristicType(json) {
+  this.ID = "";
+  this.Label = "";
+  this.Characteristics = [];
+  if (json != undefined) {
+    if (json.id != undefined) { this.ID = json.id; }
+    if (json.label != undefined) { this.Label = json.label; }
+    if (json.characteristics != undefined) {
+      for (var len = json.characteristics.length, n = 0; n < len; n++) {
+        this.Characteristics.push(new ZollerArticleCharacteristic(json.characteristics[n]));
+      }
+    }
+  }
 }
-function ZollerArticleCharacteristic(json){
-	this.ID = "";
-	this.Label = "";
-	if (json != undefined){
-		if (json.id != undefined){this.ID = json.id;}
-		if (json.label != undefined){this.Label = json.label;}
-	}
+function ZollerArticleCharacteristic(json) {
+  this.ID = "";
+  this.Label = "";
+  if (json != undefined) {
+    if (json.id != undefined) { this.ID = json.id; }
+    if (json.label != undefined) { this.Label = json.label; }
+  }
 }
 
-function GetACCharacteristicLabelById(systemId, typeId, identifier){
-	if (identifier != undefined && systemId != undefined && typeId != undefined){
-		var c = GetACCharacteristicById(systemId, typeId, identifier);
-		if (c != undefined){
-			return c.Label;
-		}
-	}
+function GetACCharacteristicLabelById(systemId, typeId, identifier) {
+  if (identifier != undefined && systemId != undefined && typeId != undefined) {
+    var c = GetACCharacteristicById(systemId, typeId, identifier);
+    if (c != undefined) {
+      return c.Label;
+    }
+  }
 }
-function GetACCharacteristicById(systemId, typeId, identifier){
-	if (identifier != undefined && systemId != undefined && typeId != undefined){
-		var t = GetACTypeById(systemId,typeId);
-		if (t != undefined){
-			for (var len = t.Characteristics.length, n = 0; n < len; n++){
-				if (t.Characteristics[n].ID == identifier){
-					return t.Characteristics[n];
-				}
-			}
-		}
-	}
-	return undefined;
+function GetACCharacteristicById(systemId, typeId, identifier) {
+  if (identifier != undefined && systemId != undefined && typeId != undefined) {
+    var t = GetACTypeById(systemId, typeId);
+    if (t != undefined) {
+      for (var len = t.Characteristics.length, n = 0; n < len; n++) {
+        if (t.Characteristics[n].ID == identifier) {
+          return t.Characteristics[n];
+        }
+      }
+    }
+  }
+  return undefined;
 }
-function GetACTypeById(systemId, identifier){
-	if (identifier != undefined && systemId != undefined){
-		var s = GetACSystemById(systemId);
-		if (s != undefined){
-			console.log("Found System: ",s);
-			for (var len = s.Types.length, n = 0; n < len; n++){
-				if (s.Types[n].ID == identifier){
-					return s.Types[n];
-				}
-			}
-		}
-	}
-	return undefined;
+function GetACTypeById(systemId, identifier) {
+  if (identifier != undefined && systemId != undefined) {
+    var s = GetACSystemById(systemId);
+    if (s != undefined) {
+      console.log("Found System: ", s);
+      for (var len = s.Types.length, n = 0; n < len; n++) {
+        if (s.Types[n].ID == identifier) {
+          return s.Types[n];
+        }
+      }
+    }
+  }
+  return undefined;
 }
-function GetACSystemById(identifier){
-	if (identifier != undefined){
-		for (a = 0; a < _ZollerACs.length; a++){
-			if (_ZollerACs[a].ID == identifier){
-				return _ZollerACs[a];
-			}
-		}
-	}
-	return undefined;
+function GetACSystemById(identifier) {
+  if (identifier != undefined) {
+    for (a = 0; a < _ZollerACs.length; a++) {
+      if (_ZollerACs[a].ID == identifier) {
+        return _ZollerACs[a];
+      }
+    }
+  }
+  return undefined;
 }
 
 // **************************************************************************
@@ -725,16 +633,16 @@ function ZollerCharacteristicStructure(xml) {
   for (var len = xml.children.length, n = 0; n < len; n++) {
     this.Characteristics.push(new ZollerCharacteristicItem(xml.children[n], this.System, this.Type));
   }
-	this.ArticleCharacteristicBar = GetACSystemById(this.System);
-	this.ArticleCharacteristicType = GetACTypeById(this.System, this.Type);
+  this.ArticleCharacteristicBar = GetACSystemById(this.System);
+  this.ArticleCharacteristicType = GetACTypeById(this.System, this.Type);
 }
 
 function ZollerCharacteristicItem(xml, systemId, typeId) {
   //console.log(xml);
   this.Id = xml.tagName;
-  this.Label = GetACCharacteristicLabelById(systemId,typeId,this.Id);
+  this.Label = GetACCharacteristicLabelById(systemId, typeId, this.Id);
   this.Value = xml.innerHTML;
-	this.ArticleCharacteristic = GetACCharacteristicById(systemId,typeId,this.Id);
+  this.ArticleCharacteristic = GetACCharacteristicById(systemId, typeId, this.Id);
 }
 
 
@@ -752,16 +660,16 @@ function ZollerCharacteristicItem(xml, systemId, typeId) {
 function ZollerGraphicImage(file, group) {
   this.FileName = file;
   this.GraphicGroup = group;
-	var img = new Image(_imageMediumPreviewSize.width,_imageMediumPreviewSize.height);
-	if (this.FileName.endsWith(".dxf") || this.FileName.endsWith(".stp")){
-		this.ImageURL = _WebServiceBaseURL + "Graphic/" + this.GraphicGroup + "/" + this.FileName + "?w=800&h=600";
-		img.src = _WebServiceBaseURL + "Graphic/" + this.GraphicGroup + "/" + this.FileName + "?w=" + _imageMediumPreviewSize.width + "&h=" + _imageMediumPreviewSize.height;	
-	}else{
-		this.ImageURL = _WebServiceBaseURL + "Graphic/" + this.GraphicGroup + "/" + this.FileName;
-		img.src = this.ImageURL;
-	}
-	img.setAttribute("class","graphic");
-	this.Image = img;
+  var img = new Image(_imageMediumPreviewSize.width, _imageMediumPreviewSize.height);
+  if (this.FileName.endsWith(".dxf") || this.FileName.endsWith(".stp")) {
+    this.ImageURL = _WebServiceBaseURL + "Graphic/" + this.GraphicGroup + "/" + this.FileName + "?w=800&h=600";
+    img.src = _WebServiceBaseURL + "Graphic/" + this.GraphicGroup + "/" + this.FileName + "?w=" + _imageMediumPreviewSize.width + "&h=" + _imageMediumPreviewSize.height;
+  } else {
+    this.ImageURL = _WebServiceBaseURL + "Graphic/" + this.GraphicGroup + "/" + this.FileName;
+    img.src = this.ImageURL;
+  }
+  img.setAttribute("class", "graphic");
+  this.Image = img;
 }
 
 // **************************************************************************
@@ -774,23 +682,57 @@ function ZollerGraphicImage(file, group) {
 // **************************************************************************
 
 function getValue(xml, name) {
-  if (checkNodes(xml, name)) {
+  var rtn = getNodes(xml, name);
+  if (rtn.length > 0) {
     return getNodes(xml, name)[0].innerHTML;
   } else {
     return undefined;
   }
 }
 function getNodes(xml, name) {
-  if (checkNodes(xml, name)) {
-    return xml.getElementsByTagName(name);
-  } else {
-    return undefined;
+  var arr = [];
+  if (xml != undefined) {
+    for (var len = xml.childNodes.length, n = 0; n < len; n++) {
+      if (xml.childNodes[n].tagName == name) {
+        arr.push(xml.childNodes[n]);
+      } else if (xml.childNodes[n].childNodes.length > 0) {
+        var tmpArr = [];
+        tmpArr = getNodes(xml.childNodes[n], name);
+        if (tmpArr.length > 0) {
+          for (m = 0; m < tmpArr.length; m++) {
+            arr.push(tmpArr[m]);
+          }
+        }
+      }
+    }
   }
+  return arr;
 }
-function checkNodes(xml, name) {
-  return (xml.getElementsByTagName(name).length > 0);
+function getNodeByInnerText(xml, name, search) {
+	var arr = getNodes(xml, name);
+  for (var len = arr.length, n = 0; n < len; n++) {
+		console.log(arr[n].tagName + "=" + name + " (" + (arr[n].tagName == name) + ")  " + arr[n].textContent + "=" + search + " (" + (arr[n].textContent == search) + ")");
+    if (arr[n].tagName == name && arr[n].textContent == search) {
+      return arr[n];
+    } else if (arr[n].childNodes.length > 0) {
+			var tmpVal = getNodeByInnerText(arr[n], name, search);
+			if (tmpVal != undefined){ return tmpVal; }
+    }
+  }
+  return undefined;
 }
-
+function getNodeByTagName(xml, name) {
+  for (var len = xml.childNodes.length, n = 0; n < len; n++) {
+		console.log(xml.childNodes[n].tagName + "=" + name + " is " + (xml.childNodes[n].tagName == name));
+    if (xml.childNodes[n].tagName == name) {
+      return xml.childNodes[n];
+    } else if (xml.childNodes[n].childNodes.length > 0) {
+			var tempVal = getNodeByTagName(xml.childNodes[n], name);
+			if (tempVal != undefined){ return tempVal; }
+    }
+  }
+  return undefined;
+}
 
 // **************************************************************************
 // *******************************Web Request*******************************
@@ -816,9 +758,10 @@ var _XMLDeclaration = "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes
 
 var _RequestBaseURL = "http://server:8086/UpdateSetupSheet.asmx/SetZoller";
 var _WebServiceBaseURL = "http://server:8084/ZollerDbService/";
-function _WebRequest(method, query, callback, data) {
+function _WebRequest(method, query, callback, data, async) {
   var xhr = new XMLHttpRequest();
-  xhr.open("POST", _RequestBaseURL, false);
+  if (async == undefined) { async = false; }
+  xhr.open("POST", _RequestBaseURL, async);
 
   xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
@@ -858,178 +801,178 @@ function _WebRequest(method, query, callback, data) {
 //
 // **************************************************************************
 
-function _HTMLDynamic(tag,id,cls,contents){
-	var elmnt = document.createElement(tag);
-	elmnt.id = id;
-	elmnt.setAttribute("class", cls);
-	elmnt.innerHTML = contents;
-	return elmnt;
+function _HTMLDynamic(tag, id, cls, contents) {
+  var elmnt = document.createElement(tag);
+  elmnt.id = id;
+  elmnt.setAttribute("class", cls);
+  elmnt.innerHTML = contents;
+  return elmnt;
 }
-function _HTMLField(label,val){
-	var mainDiv = document.createElement("div");
-	var lbl = _HTMLDynamic("label","","label label-default",label);
-	var txt = "<input type='text' class='form-control' value='" + val + "' />";
-	mainDiv.appendChild(lbl);
-	mainDiv.innerHTML += txt;
-	return mainDiv;
+function _HTMLField(label, val) {
+  var mainDiv = document.createElement("div");
+  var lbl = _HTMLDynamic("label", "", "label label-default", label);
+  var txt = "<input type='text' class='form-control' value='" + val + "' />";
+  mainDiv.appendChild(lbl);
+  mainDiv.innerHTML += txt;
+  return mainDiv;
 }
 
-function HTMLSingleComponent(component){
-	this.Reference = component;
-	this.GetMarkup = function(){
-		var cmp = this.Reference
-		var pnlMain = _HTMLDynamic("div","pnlComponent" + cmp.ComponentId, "panel-body","");
-		
-		var previewImg = "";
-		
-		var txtId = _HTMLField("Component Id", cmp.ComponentId);
-		pnlMain.appendChild(txtId);
-		
-		var txtDesc = _HTMLField("Description", cmp.Description);
-		pnlMain.appendChild(txtDesc);
-		
-		var pnlAC = _HTMLDynamic("div","pnlAC" + cmp.ComponentId, "panel-body","");
-		var acMain,acUl;
-		acMain = "<ul>";
-		for (var len = cmp.CharacteristicStructures.length, n = 0; n < len; n++){
-			var ac = cmp.CharacteristicStructures[n];
-			acMain += "<li>" + ac.System + "</li>";
-			acUl = "<ul>";
-			for (var clen = ac.Characteristics.length, i = 0; i < clen; i++){
-				if (ac.Characteristics[i].Label != "" && ac.Characteristics[i].ArticleCharacteristic != undefined){
-					acUl += "<li>" + ac.Characteristics[i].Label + ": " + ac.Characteristics[i].Value + "</li>";
-				}else{
-					acUl += "<li>" + ac.Characteristics[i].Id + ": " + ac.Characteristics[i].Value + "</li>";
-				}
-			}
-			acUl += "</ul>";
-			acMain += acUl;
-		}
-		acMain += "</ul>"
-		pnlAC.innerHTML = acMain;
-		pnlMain.innerHTML += "<div class=\"panel panel-default\"><div class=\"panel-heading\"><h3>Article Characteristics</h3></div>" + pnlAC.outerHTML + "</div>";
-		
-		var pnlGrphcs = _HTMLDynamic("div","pnlGrphcs" + cmp.ComponentId, "panel-body","");
-		if (cmp.Images.length > 0){
-			for (var len = cmp.Images.length, n = 0; n < len; n++){
-				pnlGrphcs.innerHTML += "<a target=\"_blank\" href=\"" + cmp.Images[n].ImageURL + "\" class=\"graphicLink\">" + cmp.Images[n].Image.outerHTML + "</a>";//<img class=\"graphic\" src=\"" + cmp.Images[n].ImageURL + "\" />
-				if (previewImg == ""){previewImg = cmp.Images[n].Image.outerHTML;}
-			}
-		}
-		if (cmp.SVG != undefined){
-			var doc = new DOMParser().parseFromString(cmp.SVG.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&'),"application/xml");
-			var tmpSvg = pnlGrphcs.appendChild(pnlGrphcs.ownerDocument.importNode(doc.documentElement, true));
-			tmpSvg.setAttribute("stroke-width","1");
-			tmpSvg.setAttribute("class","graphic");
-			tmpSvg.setAttribute("onclick","this.classList.toggle('Large');");
-		}
-		pnlMain.innerHTML += "<div class=\"panel panel-default\"><div class=\"panel-heading\"><h3>Graphics</h3></div>" + pnlGrphcs.outerHTML + "</div>";
-		
-		var out = "<div class=\"panel panel-default\"><div class=\"panel-heading\"><h2><a target=\"_blank\" href=\"" + _WebServiceBaseURL + "/Component/" + cmp.ComponentId + "\">Component '" + cmp.ComponentId + "'</a></h2>" + previewImg + "</div>" + pnlMain.outerHTML + "</div>";
-		
-		return out;
-	}
+function HTMLSingleComponent(component) {
+  this.Reference = component;
+  this.GetMarkup = function () {
+    var cmp = this.Reference
+    var pnlMain = _HTMLDynamic("div", "pnlComponent" + cmp.ComponentId, "panel-body", "");
+
+    var previewImg = "";
+
+    var txtId = _HTMLField("Component Id", cmp.ComponentId);
+    pnlMain.appendChild(txtId);
+
+    var txtDesc = _HTMLField("Description", cmp.Description);
+    pnlMain.appendChild(txtDesc);
+
+    var pnlAC = _HTMLDynamic("div", "pnlAC" + cmp.ComponentId, "panel-body", "");
+    var acMain, acUl;
+    acMain = "<ul>";
+    for (var len = cmp.CharacteristicStructures.length, n = 0; n < len; n++) {
+      var ac = cmp.CharacteristicStructures[n];
+      acMain += "<li>" + ac.System + "</li>";
+      acUl = "<ul>";
+      for (var clen = ac.Characteristics.length, i = 0; i < clen; i++) {
+        if (ac.Characteristics[i].Label != "" && ac.Characteristics[i].ArticleCharacteristic != undefined) {
+          acUl += "<li>" + ac.Characteristics[i].Label + ": " + ac.Characteristics[i].Value + "</li>";
+        } else {
+          acUl += "<li>" + ac.Characteristics[i].Id + ": " + ac.Characteristics[i].Value + "</li>";
+        }
+      }
+      acUl += "</ul>";
+      acMain += acUl;
+    }
+    acMain += "</ul>"
+    pnlAC.innerHTML = acMain;
+    pnlMain.innerHTML += "<div class=\"panel panel-default\"><div class=\"panel-heading\"><h3>Article Characteristics</h3></div>" + pnlAC.outerHTML + "</div>";
+
+    var pnlGrphcs = _HTMLDynamic("div", "pnlGrphcs" + cmp.ComponentId, "panel-body", "");
+    if (cmp.Images.length > 0) {
+      for (var len = cmp.Images.length, n = 0; n < len; n++) {
+        pnlGrphcs.innerHTML += "<a target=\"_blank\" href=\"" + cmp.Images[n].ImageURL + "\" class=\"graphicLink\">" + cmp.Images[n].Image.outerHTML + "</a>";//<img class=\"graphic\" src=\"" + cmp.Images[n].ImageURL + "\" />
+        if (previewImg == "") { previewImg = cmp.Images[n].Image.outerHTML; }
+      }
+    }
+    if (cmp.SVG != undefined) {
+      var doc = new DOMParser().parseFromString(cmp.SVG.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'), "application/xml");
+      var tmpSvg = pnlGrphcs.appendChild(pnlGrphcs.ownerDocument.importNode(doc.documentElement, true));
+      tmpSvg.setAttribute("stroke-width", "1");
+      tmpSvg.setAttribute("class", "graphic");
+      tmpSvg.setAttribute("onclick", "this.classList.toggle('Large');");
+    }
+    pnlMain.innerHTML += "<div class=\"panel panel-default\"><div class=\"panel-heading\"><h3>Graphics</h3></div>" + pnlGrphcs.outerHTML + "</div>";
+
+    var out = "<div class=\"panel panel-default\"><div class=\"panel-heading\"><h2><a target=\"_blank\" href=\"" + _WebServiceBaseURL + "/Component/" + cmp.ComponentId + "\">Component '" + cmp.ComponentId + "'</a></h2>" + previewImg + "</div>" + pnlMain.outerHTML + "</div>";
+
+    return out;
+  }
 }
-function HTMLTool(tool){
-	this.Reference = tool;
-	this.GetMarkup = function(){
-		var cmp = this.Reference
-		var previewImg = "";
-		var pnlMain = _HTMLDynamic("div","pnlComponent" + cmp.ToolId, "panel-body","");
-		
-		var txtId = _HTMLField("Tool Id", cmp.ToolId);
-		pnlMain.appendChild(txtId);
-		
-		var txtDesc = _HTMLField("Description", cmp.Description);
-		pnlMain.appendChild(txtDesc);
-		
-		var pnlAC = _HTMLDynamic("div","pnlAC" + cmp.ToolId, "panel-body","");
-		var acMain,acUl;
-		acMain = "<ul>";
-		for (var len = cmp.CharacteristicStructures.length, n = 0; n < len; n++){
-			var ac = cmp.CharacteristicStructures[n];
-			acMain += "<li>" + ac.System + "</li>";
-			acUl = "<ul>";
-			for (var clen = ac.Characteristics.length, i = 0; i < clen; i++){
-				acUl += "<li>" + ac.Characteristics[i].Id + ": " + ac.Characteristics[i].Value + "</li>";
-			}
-			acUl += "</ul>";
-			acMain += acUl;
-		}
-		acMain += "</ul>"
-		pnlAC.innerHTML = acMain;
-		pnlMain.innerHTML += "<div class=\"panel panel-default\"><div class=\"panel-heading\"><h3>Article Characteristics</h3></div>" + pnlAC.outerHTML + "</div>";
-		
-		var pnlGrphcs = _HTMLDynamic("div","pnlGrphcs" + cmp.ToolId, "panel-body","");
-		if (cmp.Images.length > 0){
-			for (var len = cmp.Images.length, n = 0; n < len; n++){
-				pnlGrphcs.innerHTML += "<a target=\"_blank\" href=\"" + cmp.Images[n].ImageURL + "\" class=\"graphicLink\">" + cmp.Images[n].Image.outerHTML + "</a>";//<img class=\"graphic\" src=\"" + cmp.Images[n].ImageURL + "\" />
-				if (previewImg == ""){previewImg = cmp.Images[n].Image.outerHTML;}
-			}
-		}
-		if (cmp.SVG != undefined){
-			var doc = new DOMParser().parseFromString(cmp.SVG.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&'),"application/xml");
-			var tmpSvg = pnlGrphcs.appendChild(pnlGrphcs.ownerDocument.importNode(doc.documentElement, true));
-			tmpSvg.setAttribute("stroke-width","1");
-			tmpSvg.setAttribute("class","graphic");
-			tmpSvg.setAttribute("onclick","this.classList.toggle('Large');");
-		}
-		pnlMain.innerHTML += "<div class=\"panel panel-default\"><div class=\"panel-heading\"><h3>Graphics</h3></div>" + pnlGrphcs.outerHTML + "</div>";
-		
-		var pnlSC = _HTMLDynamic("div","pnlSC" + cmp.ToolId, "panel-body","");
-		var scMain;
-		scMain = "<ul>";
-		for (var len = cmp.SingleComponents.length, n = 0; n < len; n++){
-			var sc = cmp.SingleComponents[n];
-			scMain += "<li><button type=\"button\" onclick=\"var tmpSC = new ZollerSingleComponent('" + cmp.SingleComponents[n].ComponentId + "');tmpSC.DrawHTML(pnlSingleComponentPreview);\">" + cmp.SingleComponents[n].ComponentId + "</button></li>";
-		}
-		scMain += "</ul>"
-		pnlAC.innerHTML = scMain;
-		pnlMain.innerHTML += "<div class=\"panel panel-default\"><div class=\"panel-heading\"><h3>Single Components</h3></div>" + pnlAC.outerHTML + "<div id='pnlSingleComponentPreview'></div></div>";
-		
-		var out = "<div class=\"panel panel-default\"><div class=\"panel-heading\"><h2><a target=\"_blank\" href=\"" + _WebServiceBaseURL + "/Tool/" + cmp.ToolId + "\">Tool '" + cmp.ToolId + "'</a></h2>" + previewImg + "</div>" + pnlMain.outerHTML + "</div>";
-		
-		return out;
-	}
+function HTMLTool(tool) {
+  this.Reference = tool;
+  this.GetMarkup = function () {
+    var cmp = this.Reference
+    var previewImg = "";
+    var pnlMain = _HTMLDynamic("div", "pnlComponent" + cmp.ToolId, "panel-body", "");
+
+    var txtId = _HTMLField("Tool Id", cmp.ToolId);
+    pnlMain.appendChild(txtId);
+
+    var txtDesc = _HTMLField("Description", cmp.Description);
+    pnlMain.appendChild(txtDesc);
+
+    var pnlAC = _HTMLDynamic("div", "pnlAC" + cmp.ToolId, "panel-body", "");
+    var acMain, acUl;
+    acMain = "<ul>";
+    for (var len = cmp.CharacteristicStructures.length, n = 0; n < len; n++) {
+      var ac = cmp.CharacteristicStructures[n];
+      acMain += "<li>" + ac.System + "</li>";
+      acUl = "<ul>";
+      for (var clen = ac.Characteristics.length, i = 0; i < clen; i++) {
+        acUl += "<li>" + ac.Characteristics[i].Id + ": " + ac.Characteristics[i].Value + "</li>";
+      }
+      acUl += "</ul>";
+      acMain += acUl;
+    }
+    acMain += "</ul>"
+    pnlAC.innerHTML = acMain;
+    pnlMain.innerHTML += "<div class=\"panel panel-default\"><div class=\"panel-heading\"><h3>Article Characteristics</h3></div>" + pnlAC.outerHTML + "</div>";
+
+    var pnlGrphcs = _HTMLDynamic("div", "pnlGrphcs" + cmp.ToolId, "panel-body", "");
+    if (cmp.Images.length > 0) {
+      for (var len = cmp.Images.length, n = 0; n < len; n++) {
+        pnlGrphcs.innerHTML += "<a target=\"_blank\" href=\"" + cmp.Images[n].ImageURL + "\" class=\"graphicLink\">" + cmp.Images[n].Image.outerHTML + "</a>";//<img class=\"graphic\" src=\"" + cmp.Images[n].ImageURL + "\" />
+        if (previewImg == "") { previewImg = cmp.Images[n].Image.outerHTML; }
+      }
+    }
+    if (cmp.SVG != undefined) {
+      var doc = new DOMParser().parseFromString(cmp.SVG.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'), "application/xml");
+      var tmpSvg = pnlGrphcs.appendChild(pnlGrphcs.ownerDocument.importNode(doc.documentElement, true));
+      tmpSvg.setAttribute("stroke-width", "1");
+      tmpSvg.setAttribute("class", "graphic");
+      tmpSvg.setAttribute("onclick", "this.classList.toggle('Large');");
+    }
+    pnlMain.innerHTML += "<div class=\"panel panel-default\"><div class=\"panel-heading\"><h3>Graphics</h3></div>" + pnlGrphcs.outerHTML + "</div>";
+
+    var pnlSC = _HTMLDynamic("div", "pnlSC" + cmp.ToolId, "panel-body", "");
+    var scMain;
+    scMain = "<ul>";
+    for (var len = cmp.SingleComponents.length, n = 0; n < len; n++) {
+      var sc = cmp.SingleComponents[n];
+      scMain += "<li><button type=\"button\" onclick=\"var tmpSC = new ZollerSingleComponent('" + cmp.SingleComponents[n].ComponentId + "');tmpSC.DrawHTML(pnlSingleComponentPreview);\">" + cmp.SingleComponents[n].ComponentId + "</button></li>";
+    }
+    scMain += "</ul>"
+    pnlAC.innerHTML = scMain;
+    pnlMain.innerHTML += "<div class=\"panel panel-default\"><div class=\"panel-heading\"><h3>Single Components</h3></div>" + pnlAC.outerHTML + "<div id='pnlSingleComponentPreview'></div></div>";
+
+    var out = "<div class=\"panel panel-default\"><div class=\"panel-heading\"><h2><a target=\"_blank\" href=\"" + _WebServiceBaseURL + "/Tool/" + cmp.ToolId + "\">Tool '" + cmp.ToolId + "'</a></h2>" + previewImg + "</div>" + pnlMain.outerHTML + "</div>";
+
+    return out;
+  }
 }
-function HTMLSettingSheet(settingsheet){
-	this.Reference = settingsheet;
-	this.GetMarkup = function(){
-		var cmp = this.Reference
-		var pnlMain = _HTMLDynamic("div","pnlComponent" + cmp.SettingSheetId, "panel-body","");
-		
-		var previewImg = "";
-		var txtId = _HTMLField("Setting Sheet Id", cmp.SettingSheetId);
-		pnlMain.appendChild(txtId);
-		
-		var txtPartNo = _HTMLField("Part #", cmp.Name);
-		pnlMain.appendChild(txtPartNo);
-		
-		var txtStep = _HTMLField("Step #", cmp.WorkStep);
-		pnlMain.appendChild(txtStep);
-		
-		var pnlGrphcs = _HTMLDynamic("div","pnlGrphcs" + cmp.ToolId, "panel-body","");
-		if (cmp.Images.length > 0){
-			for (var len = cmp.Images.length, n = 0; n < len; n++){
-				pnlGrphcs.innerHTML += "<a target=\"_blank\" href=\"" + cmp.Images[n].ImageURL + "\" class=\"graphicLink\">" + cmp.Images[n].Image.outerHTML + "</a>";//<img class=\"graphic\" src=\"" + cmp.Images[n].ImageURL + "\" />
-				if (previewImg == ""){previewImg = cmp.Images[n].Image.outerHTML;}
-			}
-		}
-		
-		var pnlT = _HTMLDynamic("div","pnlSC" + cmp.SettingSheetId, "panel-body","");
-		var tMain;
-		tMain = "<ul>";
-		for (var len = cmp.Tools.length, n = 0; n < len; n++){
-			var sc = cmp.Tools[n];
-			tMain += "<li><button type=\"button\" onclick=\"var tmpT = new ZollerTool('" + cmp.Tools[n].ToolId + "');tmpT.DrawHTML(pnlToolPreview);\">" + cmp.Tools[n].ToolId + "</button></li>";
-		}
-		tMain += "</ul>"
-		pnlT.innerHTML = tMain;
-		pnlMain.innerHTML += "<div class=\"panel panel-default\"><div class=\"panel-heading\"><h3>Tools</h3></div>" + pnlT.outerHTML + "<div id='pnlToolPreview'></div></div>";
-		
-		var out = "<div class=\"panel panel-default\"><div class=\"panel-heading\"><h2><a target=\"_blank\" href=\"" + _WebServiceBaseURL + "/Tool/" + cmp.SettingSheetId + "\">Tool '" + cmp.SettingSheetId + "'</a></h2>" + previewImg + "</div>" + pnlMain.outerHTML + "</div>";
-		
-		return out;
-	}
+function HTMLSettingSheet(settingsheet) {
+  this.Reference = settingsheet;
+  this.GetMarkup = function () {
+    var cmp = this.Reference
+    var pnlMain = _HTMLDynamic("div", "pnlComponent" + cmp.SettingSheetId, "panel-body", "");
+
+    var previewImg = "";
+    var txtId = _HTMLField("Setting Sheet Id", cmp.SettingSheetId);
+    pnlMain.appendChild(txtId);
+
+    var txtPartNo = _HTMLField("Part #", cmp.Name);
+    pnlMain.appendChild(txtPartNo);
+
+    var txtStep = _HTMLField("Step #", cmp.WorkStep);
+    pnlMain.appendChild(txtStep);
+
+    var pnlGrphcs = _HTMLDynamic("div", "pnlGrphcs" + cmp.ToolId, "panel-body", "");
+    if (cmp.Images.length > 0) {
+      for (var len = cmp.Images.length, n = 0; n < len; n++) {
+        pnlGrphcs.innerHTML += "<a target=\"_blank\" href=\"" + cmp.Images[n].ImageURL + "\" class=\"graphicLink\">" + cmp.Images[n].Image.outerHTML + "</a>";//<img class=\"graphic\" src=\"" + cmp.Images[n].ImageURL + "\" />
+        if (previewImg == "") { previewImg = cmp.Images[n].Image.outerHTML; }
+      }
+    }
+
+    var pnlT = _HTMLDynamic("div", "pnlSC" + cmp.SettingSheetId, "panel-body", "");
+    var tMain;
+    tMain = "<ul>";
+    for (var len = cmp.Tools.length, n = 0; n < len; n++) {
+      var sc = cmp.Tools[n];
+      tMain += "<li><button type=\"button\" onclick=\"var tmpT = new ZollerTool('" + cmp.Tools[n].ToolId + "');tmpT.DrawHTML(pnlToolPreview);\">" + cmp.Tools[n].ToolId + "</button></li>";
+    }
+    tMain += "</ul>"
+    pnlT.innerHTML = tMain;
+    pnlMain.innerHTML += "<div class=\"panel panel-default\"><div class=\"panel-heading\"><h3>Tools</h3></div>" + pnlT.outerHTML + "<div id='pnlToolPreview'></div></div>";
+
+    var out = "<div class=\"panel panel-default\"><div class=\"panel-heading\"><h2><a target=\"_blank\" href=\"" + _WebServiceBaseURL + "/Tool/" + cmp.SettingSheetId + "\">Tool '" + cmp.SettingSheetId + "'</a></h2>" + previewImg + "</div>" + pnlMain.outerHTML + "</div>";
+
+    return out;
+  }
 }
 
