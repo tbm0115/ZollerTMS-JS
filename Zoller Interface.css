@@ -1,0 +1,328 @@
+.assembly{
+	position: relative;
+	width: 100%;
+	border-left: 1px outset black;
+	border-right: 1px outset black;
+	display: block;
+	padding: 5px;
+	
+	/*http://www.colorzilla.com/gradient-editor/#333333+10,151515+40,151515+60,333333+90*/
+	background: #333333;
+	background: -moz-linear-gradient(top,  #333333 10%, #151515 40%, #151515 60%, #333333 90%);
+	background: -webkit-linear-gradient(top,  #333333 10%,#151515 40%,#151515 60%,#333333 90%);
+	background: linear-gradient(to bottom,  #333333 10%,#151515 40%,#151515 60%,#333333 90%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#333333', endColorstr='#333333',GradientType=0 );
+
+
+	color: whitesmoke;
+	font-weight: 600;
+	text-shadow: 0.5px 0.5px 0.5px rgba(0, 0, 0, 0.6);
+	overflow-x: auto;
+	overflow-y: hidden;
+	/*overflow: hidden;*/
+	white-space: nowrap;
+}
+.assembly:first-child{
+	border-top: 1px solid black;
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
+}
+.assembly:last-child{
+	border-bottom: 1px solid black;
+	border-bottom-left-radius: 5px;
+	border-bottom-right-radius: 5px;
+}
+.assembly-sm{
+	height: 100px;
+	/*font-size: 1em;*/
+}
+.assembly-md{
+	height: 125px;
+	/*font-size: 1.15em;*/
+}
+.assembly-lg{
+	height: 150px;
+	/*font-size: 1.25em;*/
+}
+.assembly-sm > .assembly-name,.assembly-sm > .assembly-item{
+	width: 175px;
+}
+.assembly-md > .assembly-name,.assembly-md > .assembly-item{
+	width: 200px;
+}
+.assembly-lg > .assembly-name,.assembly-lg > .assembly-item{
+	width: 225px;
+}
+
+.delete{
+	position: absolute;
+	left: 3px;
+	bottom: 3px;
+	cursor: pointer;
+	font-size: 50%;
+	color: rgba(255, 255, 255, 0.25) !important;
+	text-shadow: none;
+}
+.delete:hover{
+	color: rgba(255, 255, 255, 1) !important;
+}
+.delete::after{
+	content: "remove";
+}
+
+.assembly-name{
+	position: relative;
+	display: inline-block;
+	height: 95%;
+	margin-right: 5px;
+	vertical-align: top;
+	border-top-left-radius: 7px;
+	border-bottom-left-radius: 7px;
+	border: 1px outset black;
+}
+.assembly-name:hover{
+	top: -0.5px;
+	left: -0.5px;
+	cursor: pointer;
+	box-shadow: 1px 1px rgba(0, 0, 0, 0.5);
+}
+.assembly-name.clicked{
+	background: #b4e391;
+	background: -moz-linear-gradient(top,  #b4e391 0%, #61c419 50%, #b4e391 100%);
+	background: -webkit-linear-gradient(top,  #b4e391 0%,#61c419 50%,#b4e391 100%);
+	background: linear-gradient(to bottom,  #b4e391 0%,#61c419 50%,#b4e391 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#b4e391', endColorstr='#b4e391',GradientType=0 );
+}
+.assembly-name p{
+	position: relative;
+	display: block;
+	width: 100%;
+	top: 1em;/*40%*/
+	margin: 0;
+	overflow: hidden;
+	text-align: center;
+	text-overflow: clip;
+	text-overflow: "...";
+	text-overflow: ellipsis;
+}
+.assembly-name p:hover{
+	overflow: initial;
+	text-overflow: initial;
+	z-index: 1000;
+}
+.assembly-name img:first-of-type{
+	position: relative;
+	display: block;
+	width: 50%;
+	height: 45%;
+	margin-left: auto;
+	margin-right: auto;
+	bottom: -1.25em;
+	border: 2px ridge #333;
+	border-radius: 3px;
+}
+.assembly-name .id{
+	position: absolute;
+	top: 3px;
+	left: 3px;
+}
+.assembly-name .childcount{
+	position: absolute;
+	bottom: 3px;
+	right: 3px;
+	font-size: 50%;
+}
+.assembly-name .childcount::after{
+	content: " components";
+}
+
+.assembly-item{
+	position: relative;
+	display: inline-block;
+	height: 95%;
+	top: 0px;
+	left: 0px;
+	/*margin-right: 5px;
+	border: 1px dashed black;*/
+	vertical-align: top;
+	border-top: 1px inset;
+	border-bottom: 1px inset;
+	-webkit-transation: top 1s, left 1s;
+	transition-property: top, left;
+	transition-duration: 0.3s;
+}
+.assembly-item:nth-child(2){
+	border-left: 1px inset;
+	/*border-bottom-left-radius: 3px;
+	border-top-left-radius: 3px;*/
+}
+.assembly-item:last-child{
+	border-right: 1px inset;
+	border-bottom-right-radius: 3px;
+	border-top-right-radius: 3px;
+}
+.assembly-item:hover{
+	top: -2px;
+	left: -2px;
+	background: #333333;
+	background: -moz-linear-gradient(top,  #333333 0%, #666666 50%, #333333 100%);
+	background: -webkit-linear-gradient(top,  #333333 0%,#666666 50%,#333333 100%);
+	background: linear-gradient(to bottom,  #333333 0%,#666666 50%,#333333 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#333333', endColorstr='#333333',GradientType=0 );
+	cursor: pointer;
+	box-shadow: 3px 3px rgba(0, 0, 0, 0.5);
+}
+.assembly-item p{
+	position: relative;
+	display: block;
+	/*border: 1px dashed black;*/
+	text-align: left;
+	padding-left: 10px;
+	height: 22%;
+	margin: 0px;
+	width: 100%;
+	overflow: hidden;
+	text-overflow: clip;
+	text-overflow: "...";
+	text-overflow: ellipsis;
+}
+.assembly-item p:hover{
+	overflow: initial;
+	text-overflow: initial;
+	z-index: 1000;
+}
+.assembly-item a{
+	text-decoration: none;
+	color: inherit;
+}
+.assembly-item img:first-of-type{ /* Main Image */
+	/* This is incase the object is not 'TrueZoller' object, which should have Zoller Icon */
+	border: 2px ridge #101010;
+	border-radius: 3px;
+}
+
+
+.over{ /* Drag Over */
+	border: 2px dashed black;
+	border-radius: 5px;
+}
+
+.item-image{
+	position: relative;
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+	width: 50%;
+	height: 50%;
+}
+.item-image img:first-of-type{
+	width: 100%;
+	height: 100%;
+}
+
+.add-component{
+	position: absolute;
+	right: 3px;
+	top: 3px;
+	cursor: pointer;
+	font-size: 50%;
+	color: rgba(255, 255, 255, 0.25) !important;
+	text-shadow: none;
+	background: none;
+	border: none;
+}
+.add-component::after{
+	content: "Add Component";
+}
+.add-component:hover{
+	color: rgba(255, 255, 255, 1) !important;
+}
+
+.noEdit{
+	display: none;
+}
+
+.scroll{
+	position: absolute;
+	display: block;
+	background: none;
+	z-index: 1000;
+	width: 25%;
+	height: 100%;
+	top: 0px;
+}
+.scroll:hover{
+	background-color: rgba(0, 0, 0, 0.25);
+}
+.scroll-left{
+	left: 0px;
+}
+.scroll-right{
+	right: 0px;
+}
+.scroll-container{
+	position: relative;
+	display: block;
+	background: none;
+	width: 100%;
+}
+
+.tool-check{
+	position: relative;
+	display: block;
+}
+.tool-check label{
+	position: relative;
+	display: inline-block;
+	width: 90%;
+	clear: right;
+}
+.tool-check input[type="checkbox"]{
+	position: relative;
+	display: inline-block;
+	width: 5%;
+}
+
+.component-check{
+	position: relative;
+	display: block;
+	margin-left: 15%;
+}
+.component-check label{
+	position: relative;
+	display: inline-block;
+	width: 90%;
+	clear: right;
+}
+.component-block input[type="checkbox"]{
+	position: relative;
+	display: block;
+	width: 5%;
+}
+
+.relatedTool{
+	position: relative;
+	display: block;
+}
+.relatedTool img:first-of-type{
+	position: relative;
+	display: inline;
+	width: 300px;
+	height: 200px;
+	border: 2px outset #333;
+	border-radius: 3px;
+	margin: 3px;
+}
+
+.zollerTool{
+	position: absolute;
+	left: 3px;
+	bottom: 3px;
+	width: 24px;
+	height: 24px;
+	background-image: url("http://tms-forum.zoller.info/favicon.ico");
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: 24px 24px;
+}
+
