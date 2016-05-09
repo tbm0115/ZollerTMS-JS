@@ -94,11 +94,11 @@ The **SetHandlers()** function globaly sets the handlers for the appropriate ele
 
 - Set drag/drop event handlers for *assembly-item* class items <sub>(Single Components)</sub>
   - DragStart
-	- DragEnter
-	- DragOver
-	- DragLeave
-	- Drop
-	- DragEnd
+  - DragEnter
+  - DragOver
+  - DragLeave
+  - Drop
+  - DragEnd
 - Sets handler to raise the custom event **componentselected** which signifies that a component item has been clicked and requests details.
 - Sets handler to raise the custom event **componentdelete** which signifies that the delete button has been clicked and requests the Component be removed from the Tool.
 - Sets handler to raise the custom event **tooldelete** which signifies that the remove button has been clicked and requests the Tool be removed from the document or Setting Sheet.
