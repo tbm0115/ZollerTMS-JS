@@ -69,5 +69,25 @@ The key things to note are the objects within the **ZollerSettingSheet** object,
 
 Here, you'll notice that not only is the correct *ToolId* represented, but all subsequent data of the TMS object as well.
 
+## DrawHTML()
+The **ZollerTool** object now contains a *DrawHTML()* function. This functions generates a GUI that represents the Tool and its Single Components. The controls created by this method can overwrite or append based on the provided parent element and the overwrite flag when calling the function. Each element is given the appropriate class (used in **Zoller Interface.css**). The provided classes are used in the **SetHandlers()** function, which... sets the event handlers.
+
+For example, if you get a **ZollerSettingSheet** using:
+
+```javascript
+var ss = new ZollerSettingSheet("84");
+```
+
+we can iterate through the list of tools and append the details in the document body:
+
+```javascript
+for (var len = ss.Tools.length, n = 0; n < len; n++){
+	ss.Tools[n].DrawHTML("md", document.body);
+}
+```
+
+resulting in <sub>(This will depend on the data in your Zoller TMS and which Setting Sheet you specify for 'ss')</sub>:
+![DrawHTML Example](https://raw.githubusercontent.com/tbm0115/ZollerTMS-JS/master/DrawHTML%20Result.PNG)
+
 ## Things to consider
 Currently there is not a strong set of methods to allow updating/creating data. So, considering the example above, you cannot edit the *Description* of **T1** using the library and update the TMS. However, a method can be added to the *Tool* object that performs such a task using the *_WebRequest* method as POST/PUT/DELETE methods can be sent using the Web Method provided.

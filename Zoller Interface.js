@@ -352,11 +352,11 @@ function ZollerTool(id) {
     }
   }
 
-	// This function generates the HTML to be added to the document. 'Size' represents the preferred sizing of the interface for the user. The available options are 'sm', 'md', and 'lg'. These can be adjusted in 'Zoller Interface.css'.
+  // This function generates the HTML to be added to the document. 'Size' represents the preferred sizing of the interface for the user. The available options are 'sm', 'md', and 'lg'. These can be adjusted in 'Zoller Interface.css'.
   this.DrawHTML = function (size, parent, overwrite) {
     var ass = document.createElement("div");
     ass.setAttribute("class", "assembly assembly-" + size);
-    
+
     var divName = document.createElement("div");
     divName.setAttribute("class", "assembly-name");
     divName.setAttribute("data-tool", this.ToolId);
@@ -389,7 +389,7 @@ function ZollerTool(id) {
       delName.setAttribute("class", "delete");
       divName.appendChild(delName);
     } else {
-      var zolIcon = document.createElement("img");
+      var zolIcon = document.createElement("span");
       zolIcon.setAttribute("class", "zollerTool");
       divName.appendChild(zolIcon);
     }
@@ -459,8 +459,8 @@ function ZollerTool(id) {
 
   this.Notes = "";// Notes are for custom interface notes. This is not related to Zoller TMS!
   this.IsTrueZoller = false; // Set the current instance of an object as a true Zoller object. If the SetXML is successful, then this will be properly set to true.
-	
-	// This function can be altered to generate a custom XML structure to store Tool assemblies in non-Zoller storage. It is important that this is defined before SetXML() to avoid an undefined function.
+
+  // This function can be altered to generate a custom XML structure to store Tool assemblies in non-Zoller storage. It is important that this is defined before SetXML() to avoid an undefined function.
   this.GetXML = function () {
     var out = "<Assembly id=\"" + this.ToolId + "\" name=\"" + this.Description + "\" iszoller=\"" + this.IsTrueZoller + "\">";
     if (this.SingleComponents != undefined) {
@@ -482,7 +482,7 @@ function ZollerTool(id) {
     return out;
   }
 
-	// Determine if the object is a valid Zoller object by attempting to get data from the Zoller WebService.
+  // Determine if the object is a valid Zoller object by attempting to get data from the Zoller WebService.
   console.log("Object type is: ", (typeof id));
   var nodeTool;
   if ((typeof id) == "string") {
@@ -577,8 +577,8 @@ function ZollerSingleComponent(id) {
       }
     }
   }
-	
-	// Determine if the object is a valid Zoller object by attempting to get data from the Zoller WebService.
+
+  // Determine if the object is a valid Zoller object by attempting to get data from the Zoller WebService.
   console.log("Object type is: ", (typeof id));
   var nodeComponent;
   if ((typeof id) == "string") {
@@ -1104,7 +1104,7 @@ function toggleEdit(state) {
 }
 function deleteComponent(e) {
   console.log("Deleting '" + e.target.parentElement.dataset.component + "' from '" + e.target.parentElement.dataset.tool + "'", e.target.parentElement);
-  RaiseComponentDeleteEvent(e.target.parentElement.dataset.component,e.target.parentElement.dataset.tool);
+  RaiseComponentDeleteEvent(e.target.parentElement.dataset.component, e.target.parentElement.dataset.tool);
 }
 function deleteTool(e) {
   console.log("Deleting '" + e.target.parentElement.dataset.tool + "'", e.target.parentElement);
