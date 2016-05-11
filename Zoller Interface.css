@@ -201,7 +201,6 @@
 	border-radius: 3px;
 }
 
-
 .over{ /* Drag Over */
 	border: 2px dashed black;
 	border-radius: 5px;
@@ -326,3 +325,98 @@
 	background-size: 24px 24px;
 }
 
+.fixture{
+	position: relative;
+	width: 100%;
+	border-left: 1px outset black;
+	border-right: 1px outset black;
+	display: block;
+	padding: 5px;
+	
+	/*http://www.colorzilla.com/gradient-editor/#333333+10,151515+40,151515+60,333333+90*/
+	background: #333333;
+	background: -moz-linear-gradient(top,  #333333 10%, #151515 40%, #151515 60%, #333333 90%);
+	background: -webkit-linear-gradient(top,  #333333 10%,#151515 40%,#151515 60%,#333333 90%);
+	background: linear-gradient(to bottom,  #333333 10%,#151515 40%,#151515 60%,#333333 90%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#333333', endColorstr='#333333',GradientType=0 );
+
+
+	color: whitesmoke;
+	font-weight: 600;
+	text-shadow: 0.5px 0.5px 0.5px rgba(0, 0, 0, 0.6);
+	overflow-x: auto;
+	overflow-y: hidden;
+	/*overflow: hidden;*/
+	white-space: nowrap;
+}
+.fixture-name{
+	position: relative;
+	display: inline-block;
+	height: 95%;
+	width: 25%;
+	margin-right: 5px;
+	vertical-align: top;
+	border-top-left-radius: 7px;
+	border-bottom-left-radius: 7px;
+	border: 1px outset black;
+}
+.fixture-item{
+	position: relative;
+	display: inline-block;
+	height: 95%;
+	width: 60%;
+	top: 0px;
+	left: 0px;
+	/*margin-right: 5px;
+	border: 1px dashed black;*/
+	vertical-align: top;
+	border-top: 1px inset;
+	border-bottom: 1px inset;
+	-webkit-transation: top 1s, left 1s;
+	transition-property: top, left;
+	transition-duration: 0.3s;
+}
+.fixture-sm{
+	height: 100px;
+	/*font-size: 1em;*/
+}
+.fixture-md{
+	height: 125px;
+	/*font-size: 1.15em;*/
+}
+.fixture-lg{
+	height: 150px;
+	/*font-size: 1.25em;*/
+}
+/*.fixture-sm > .fixture-name,.fixture-sm > .fixture-item{
+	width: 175px;
+}
+.fixture-md > .fixture-name,.fixture-md > .fixture-item{
+	width: 200px;
+}
+.fixture-lg > .fixture-name,.fixture-lg > .fixture-item{
+	width: 225px;
+}
+*/
+.fixture-name p{
+	margin: 0;
+}
+.fixture-name img{
+	position: relative;
+	display: block;
+	width: 50%;
+	height: 75%;
+	margin-left: auto;
+	margin-right: auto;
+	/*bottom: -1.25em;*/
+	border: 2px ridge #333;
+	border-radius: 3px;
+}
+.fixture-item textarea{
+	position: relative;
+	display: block;
+	width: 100%;
+	height: 100%;
+	border: 1px solid black;
+	border-radius: 4px;
+}

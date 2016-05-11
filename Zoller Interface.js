@@ -56,9 +56,9 @@ var _DefaultInterfaceSize = _interfaceSizes[2];
 
 function ZollerAdapter(id) {
   if (id == undefined) {
-    this.AdapterId = '';
-    this.Name = '';
-    this.Type = '';
+    this.AdapterId = "";
+    this.Name = "";
+    this.AdapterType = "";
     this.Images = [];
     this.GetZollerData = function (id) {
       return new ZollerAdapter(id);
@@ -91,8 +91,29 @@ function ZollerAdapter(id) {
 
   this.AdapterId = getValue(nodeAdapter, "AdapterId");
   this.Name = getValue(nodeAdapter, "Name");// Grabbing the global value is okay because it only returns the first instance of the object
-  this.Type = getValue(nodeAdapter, "AdapterType");
-
+  this.AdapterType = getValue(nodeAdapter, "AdapterType");
+  var adapPres = getNodeByTagName(nodeAdapter, "AdapterPresetter");
+  this.AdapterPresetter = {
+    CES: getValue(adapPres, "CES"),
+    Focus: getValue(adapPres, "Focus"),
+    MsrRangeWidth: getValue(adapPres, "MsrRangeWidth"),
+    MsrRangeHeight: getValue(adapPres, "MsrRangeHeight"),
+    IsTurnable: getValue(adapPres, "IsTurnable"),
+    IsDriven: getValue(adapPres, "IsDriven"),
+    IsHSKAdapter: getValue(adapPres, "IsHSKAdapter"),
+    TIReindexSpindle: getValue(adapPres, "TIReindexSpindle"),
+    CheckToolClamp: getValue(adapPres, "CheckToolClamp"),
+    ZRefMode: getValue(adapPres, "ZRefMode"),
+    ZDiaMode: getValue(adapPres, "ZDiaMode"),
+    XRefMode: getValue(adapPres, "XRefMode"),
+    XDiaMode: getValue(adapPres, "XDiaMode"),
+    UseMode: getValue(adapPres, "UseMode"),
+    RunOutDoCorrection: getValue(adapPres, "RunOutDoCorrection"),
+    AxialRadialRunOutDoCorrection: getValue(adapPres, "AxialRadialRunOutDoCorrection"),
+    DetectAdapterCenter: getValue(adapPres, "DetectAdapterCenter"),
+    BarcodeDoRotation: getValue(adapPres, "BarcodeDoRotation"),
+    BarcodeManualIllumination: getValue(adapPres, "BarcodeManualIllumination")
+  }
   this.Images = [];
 
   // Iterate through each main node to find pertinent data for the current object. This is done to avoid getting data from SubData nodes
@@ -161,10 +182,17 @@ function ZollerMachine(id) {
   this.MachineId = getValue(nodeMachine, "MachineId");// Grabbing the global value is okay because it only returns the first instance of the object
   this.Name = getValue(nodeMachine, "Name");
   this.Description = getValue(nodeMachine, "Description");
-  this.MagazineCapacity = getValue(nodeMachine, "NoOfMagazinPositions");
-  this.NCToDirectory = getValue(nodeMachine, "NcProgrammTransferPath");
-  this.NCFromDirectory = getValue(nodeMachine, "NcProgrammTransferBackPath");
-  this.MachineType = getValue(nodeMachine, "Type");
+  this.NoOfMagazinPositions = getValue(nodeMachine, "NoOfMagazinPositions");
+  this.NcProgrammTransferPath = getValue(nodeMachine, "NcProgrammTransferPath");
+  this.NcProgrammDeleteBeforeTransfer = getValue(nodeMachine, "NcProgrammDeleteBeforeTransfer");
+  this.NcProgrammDeleteAfterTransfer = getValue(nodeMachine, "NcProgrammDeleteAfterTransfer");
+  this.NcProgrammTransferBackPath = getValue(nodeMachine, "NcProgrammTransferBackPath");
+  this.NcProgrammSplit = getValue(nodeMachine, "NcProgrammSplit");
+  this.UseTurningAdvisor = getValue(nodeMachine, "UseTurningAdvisor");
+  this.PostProcessorId = getValue(nodeMachine, "PostProcessorId");
+  this.CommunicationDevice = getValue(nodeMachine, "CommunicationDevice");
+  this.DatasetState = getValue(nodeMachine, "DatasetState");
+  this.Type = getValue(nodeMachine, "Type");
   this.Manufacturer = getValue(nodeMachine, "Manufacturer");
 
   this.Images = [];
@@ -282,6 +310,10 @@ function ZollerSettingSheet(id) {
   this.SettingSheetId = getValue(nodeSettingSheet, "SettingSheetId");
   this.Name = getValue(nodeSettingSheet, "Name");// Grabbing the global value is okay because it only returns the first instance of the object
   this.WorkStep = getValue(nodeSettingSheet, "WorkStep");
+  this.DatasetState = getValue(nodeSettingSheet, "DatasetState");
+  this.InvMode = getValue(nodeSettingSheet, "InvMode");
+  this.InvPhysical = getValue(nodeSettingSheet, "InvPhysical");
+  this.InvFullCopy = getValue(nodeSettingSheet, "InvFullCopy");
 
   this.Images = [];
   this.Tools = [];
@@ -328,8 +360,8 @@ function ZollerSettingSheet(id) {
 
 function ZollerTool(id) {
   if (id == undefined) {
-    this.ToolId = '';
-    this.Description = '';
+    this.ToolId = "";
+    this.Description = "";
     this.CharacteristicStructures = [];
     this.Images = [];
     this.SingleComponents = [];
@@ -338,6 +370,7 @@ function ZollerTool(id) {
     this.GetZollerData = function (id) {
       return new ZollerTool(id);
     }
+    this.Collected = false; // Custom flag determining if the tool items have been physically collected.
   }
 
   this.XML;
@@ -391,12 +424,17 @@ function ZollerTool(id) {
     } else {
       var zolIcon = document.createElement("span");
       zolIcon.setAttribute("class", "zollerTool");
+      zolIcon.onclick = function (e) {
+        MessageBox.Show("This is a tool assembly managed by Zoller TMS. The tool can only be modified or removed from the Setup Sheet via the Zoller TMS interface.",
+          "Tool Locked", MessageBox.BoxType.Okay, "info", undefined);
+        e.preventDefault();
+      }
       divName.appendChild(zolIcon);
     }
 
     if (!this.IsTrueZoller) {
-      var btnName = document.createElement("button");
-      btnName.setAttribute("type", "button");
+      var btnName = document.createElement("a");
+      //btnName.setAttribute("type", "button");
       btnName.setAttribute("class", "add-component");
       divName.appendChild(btnName);
     }
@@ -457,8 +495,8 @@ function ZollerTool(id) {
     }
   }
 
-  this.Notes = "";// Notes are for custom interface notes. This is not related to Zoller TMS!
-  this.IsTrueZoller = false; // Set the current instance of an object as a true Zoller object. If the SetXML is successful, then this will be properly set to true.
+  this.Notes = ""; // Custom property
+  this.IsTrueZoller = false; // Custom property
 
   // This function can be altered to generate a custom XML structure to store Tool assemblies in non-Zoller storage. It is important that this is defined before SetXML() to avoid an undefined function.
   this.GetXML = function () {
@@ -495,10 +533,31 @@ function ZollerTool(id) {
   }
   nodeTool = getNodeByTagName(this.XML, "Tool");
 
-  this.IsTrueZoller = true; // Set the current instance of an object as a true Zoller object. If the SetXML fails, then this remains as false.
+  this.IsTrueZoller = true; // Custom property
+  this.Collected = false; // Custom property, flag determining if the tool items have been physically collected.
 
   this.ToolId = getValue(nodeTool, "ToolId");
   this.Description = getValue(nodeTool, "Description");// Grabbing the global value is okay because it only returns the first instance of the object
+  this.TNo = getValue(nodeTool, "TNo");
+  this.LongComment = convertToPlain(getValue(nodeTool, "LongComment"));
+  this.Wobble = getValue(nodeTool, "Wobble");
+  this.DxfDisplayMode = getValue(nodeTool, "DxfDisplayMode");
+  this.VerifiedForMeasuring = getValue(nodeTool, "VerifiedForMeasuring");
+  this.IsLifetimeExpired = getValue(nodeTool, "IsLifetimeExpired");
+  this.DxfDoMirrowX = getValue(nodeTool, "DxfDoMirrowX");
+  this.DxfDoMirrowY = getValue(nodeTool, "DxfDoMirrowY");
+  this.DxfDoRotate = getValue(nodeTool, "DxfDoRotate");
+  this.DxfRotateAngl = getValue(nodeTool, "DxfRotateAngl");
+  this.AxialRunOut = getValue(nodeTool, "AxialRunOut");
+  this.IsPartsExpired = getValue(nodeTool, "IsPartsExpired");
+  this.UseTurningAdvisor = getValue(nodeTool, "UseTurningAdvisor");
+  this.TAAdapterSwapped = getValue(nodeTool, "TAAdapterSwapped");
+  this.DatasetState = getValue(nodeTool, "DatasetState");
+  this.InvMode = getValue(nodeTool, "InvMode");
+  this.InvPhysical = getValue(nodeTool, "InvPhysical");
+  this.InvFullCopy = getValue(nodeTool, "InvFullCopy");
+  this.UsedAdapterId = getValue(nodeTool, "UsedAdapterId");
+  this.UsedAdapterName = getValue(nodeTool, "UsedAdapterName");
 
   this.CharacteristicStructures = [];
   this.Images = [];
@@ -555,8 +614,8 @@ function ZollerTool(id) {
 
 function ZollerSingleComponent(id) {
   if (id == undefined) {
-    this.ComponentId = '';
-    this.Description = '';
+    this.ComponentId = "";
+    this.Description = "";
     this.CharacteristicStructures = [];
     this.Images = [];
     this.Accessories = [];
@@ -592,18 +651,30 @@ function ZollerSingleComponent(id) {
   nodeComponent = getNodeByTagName(this.XML, "Component");
 
   this.ComponentId = getValue(nodeComponent, "ComponentId");
-
   this.Description = getValue(nodeComponent, "Description");
-
-  this.EDP = getValue(nodeComponent, "SubjectNo");
-  this.OrderCode = getValue(nodeComponent, "Norm");
+  this.PartClass = getValue(nodeComponent, "PartClass");
+  this.SubjectNo = getValue(nodeComponent, "SubjectNo");
+  this.Norm = getValue(nodeComponent, "Norm");
+  this.LongComment = convertToPlain(getValue(nodeComponent, "LongComment"));
+  this.StorageUse = getValue(nodeComponent, "StorageUse");
+  this.InterfaceCodingToolSide = getValue(nodeComponent, "InterfaceCodingToolSide");
+  this.InterfaceCodingMachineSide = getValue(nodeComponent, "InterfaceCodingMachineSide");
+  this.GeneratedInterfaceCodingMachineSide = getValue(nodeComponent, "GeneratedInterfaceCodingMachineSide");
+  this.CouplingUseCharacteristic = getValue(nodeComponent, "CouplingUseCharacteristic");
+  this.DatasetState = getValue(nodeComponent, "DatasetState");
+  this.InvMode = getValue(nodeComponent, "InvMode");
+  this.InvPhysical = getValue(nodeComponent, "InvPhysical");
+  this.InvFullCopy = getValue(nodeComponent, "InvFullCopy");
+  this.SVG = getValue(nodeComponent, "ScalableVectorGraphic");
 
   this.CharacteristicStructures = [];
   this.Images = [];
   this.Accessories = [];
   this.Documents = [];
 
-  this.Notes = "";// Notes are for custom interface notes
+  this.EDP = getValue(nodeComponent, "SubjectNo"); // Custom property
+  this.OrderCode = getValue(nodeComponent, "Norm"); // Custom property
+  this.Notes = ""; // Custom property
 
   // Iterate through each main node to find pertinent data for the current object. This is done to avoid getting data from SubData nodes
   for (var len = nodeComponent.children.length, n = 0; n < len; n++) {
@@ -648,16 +719,7 @@ function ZollerSingleComponent(id) {
     if (nodeComponent.children[n].tagName == "CAT") {
       this.Category = nodeComponent.children[n].innerHTML;
     }
-    if (nodeComponent.children[n].tagName == "InterfaceCodingMachineSide") {
-      this.InterfaceCodingMachineSide = nodeComponent.children[n].innerHTML;
-    }
-    if (nodeComponent.children[n].tagName == "InterfaceCodingToolSide") {
-      this.InterfaceCodingToolSide = nodeComponent.children[n].innerHTML;
-    }
   }
-
-  // Get the most pertinent SVG data if available.
-  this.SVG = getValue(nodeComponent, "ScalableVectorGraphic");
 }
 
 function ZollerAccessory(id) {
@@ -696,7 +758,226 @@ function ZollerAccessory(id) {
   this.AccessoryId = getValue(nodeAccessory, "AccessoryId");
 
   this.Description = getValue(nodeAccessory, "Description");
+  this.LongComment = convertToPlain(getValue(nodeAccessory, "LongComment"));
+}
 
+function ZollerFixture(id) {
+  if (id == undefined) {
+    this.FixtureId = "";
+    this.Description = "";
+    this.GetZollerData = function (id) {
+      return new ZollerFixture(id);
+    }
+  }
+
+  this.XML;
+  this.SetXML = function (xml) {
+    this.XML = xml;
+    if (xml.firstChild != null && xml.firstChild.hasAttribute != null) {
+      if (xml.firstChild.hasAttribute("result")) {
+        if (xml.firstChild.getAttribute("result") == "fail") {
+          console.log("Invalid response from TMS!");
+        }
+      }
+    }
+  }
+
+  console.log("Object type is: ", (typeof id));
+  var nodeFixture;
+  if ((typeof id) == "string") {
+    this.XML = _WebRequest("GET", "Fixture/" + id + "?LoadSubData=true", this.SetXML);
+  } else if ((typeof id) == "object") {
+    this.SetXML(id);
+  } else {
+    console.log("Invalid object type!");
+    return;
+  }
+  nodeFixture = getNodeByTagName(this.XML, "Fixture");
+
+  this.FixtureId = getValue(nodeFixture, "FixtureId");
+
+  this.Description = getValue(nodeFixture, "Description");
+  this.ClampingDescription = getValue(nodeFixture, "ClampingDescription");
+  this.DrawingNo = getValue(nodeFixture, "DrawingNo");
+  this.Weight = getValue(nodeFixture, "Weight");
+  this.IsFixtureActive = getValue(nodeFixture, "IsFixtureActive");
+  this.IsSubFixture = getValue(nodeFixture, "IsSubFixture");
+  this.StorageLocation = getValue(nodeFixture, "StorageLocation");
+  this.DatasetState = getValue(nodeFixture, "DatasetState");
+  this.InvMode = getValue(nodeFixture, "InvMode");
+  this.InvPhysical = getValue(nodeFixture, "InvPhysical");
+  this.InvFullCopy = getValue(nodeFixture, "InvFullCopy");
+  this.LongComment = convertToPlain(getValue(nodeFixture, "LongComment"));
+  this.Image = new ZollerGraphicImage(getValue(nodeFixture, "GraphicFile"), getValue(nodeFixture, "GraphicGroup"));
+
+  this.Notes = ""; // Custom property
+  this.PalletJawNo = ""; // Custom property
+  this.ClampingPressure = ""; // Custom property
+  this.ClampingDiagram = ""; // Custom property
+  this.Remark = ""; // Custom property
+	
+  this.GetJSON = function(){
+    var out = "{\"id\":\"" + this.FixtureId + "\",";
+    out += "\"Notes\":\"" + this.Notes + "\",";
+    out += "\"PalletJawNo\":\"" + this.PalletJawNo + "\",";
+    out += "\"ClampingPressure\":\"" + this.ClampingPressure + "\",";
+    out += "\"ClampingDiagram\":\"" + this.ClampingDiagram + "\",";
+    out += "\"Remark\":\"" + this.Remark + "\"";
+    out += "}";
+    return out;
+  }
+	
+  this.DrawHTML = function (size, parent, overwrite) {
+    var fixt = document.createElement("div");
+    fixt.setAttribute("class", "fixture fixture-" + size);
+    fixt.setAttribute("data-fixture", this.FixtureId);
+    var fixtCol1 = document.createElement("div");
+    fixtCol1.setAttribute("class", "fixture-name");
+    var fixtName = document.createElement("p");
+    fixtName.innerHTML = "(" + this.FixtureId + ") " + this.Description;
+    fixtCol1.appendChild(fixtName);
+    var fixtImg = document.createElement("img");
+    if (this.Image != undefined) {
+      fixtImg.src = this.Image.GetCustomImageURL(800, 600);
+    }
+    fixtCol1.appendChild(fixtImg);
+
+    var fixtCol2 = document.createElement("div");
+    fixtCol2.setAttribute("class", "fixture-item");
+    var fixtNotes = document.createElement("textarea");
+    if (this.Notes != undefined && this.Notes != "") {
+      fixtNotes.value = this.Notes;
+    } else if (this.LongComment != undefined && this.LongComment != "") {
+      fixtNotes.value = "[Zoller Comment] " + this.LongComment;
+      fixtNotes.setAttribute("disabled", "disabled");
+    } else if (this.ClampingDescription != undefined && this.ClampingDescription != "") {
+      fixtNotes.value = "[Zoller Clamping] " + this.ClampingDescription;
+      fixtNotes.setAttribute("disabled", "disabled");
+    }
+    fixtCol2.appendChild(fixtNotes);
+
+    fixt.appendChild(fixtCol1);
+    fixt.appendChild(fixtCol2);
+
+    if (typeof parent !== "undefined" && parent != undefined) {
+      if (overwrite != undefined || overwrite == false) {
+        var ex = parent.querySelector("[data-fixture='" + this.FixtureId + "']").parentElement;
+        if (ex != undefined) {
+          parent.insertBefore(fixt, ex);
+          parent.removeChild(ex);
+        } else {
+          parent.appendChild(fixt);
+        }
+        setHandlers();
+      } else {
+        parent.appendChild(fixt);
+        setHandlers();
+      }
+    } else {
+      return fixt;
+    }
+  }
+}
+
+function ZollerMeasuringDeviceV2(id) {
+  if (id == undefined) {
+    this.MeasuringDeviceId = "";
+    this.Description = "";
+    this.GetZollerData = function (id) {
+      return new ZollerMeasuringDeviceV2(id);
+    }
+  }
+
+  this.XML;
+  this.SetXML = function (xml) {
+    this.XML = xml;
+    if (xml.firstChild != null && xml.firstChild.hasAttribute != null) {
+      if (xml.firstChild.hasAttribute("result")) {
+        if (xml.firstChild.getAttribute("result") == "fail") {
+          console.log("Invalid response from TMS!");
+        }
+      }
+    }
+  }
+
+  console.log("Object type is: ", (typeof id));
+  var nodeMeasuringDevice;
+  if ((typeof id) == "string") {
+    this.XML = _WebRequest("GET", "MeasuringDeviceV2/" + id + "?LoadSubData=true", this.SetXML);
+  } else if ((typeof id) == "object") {
+    this.SetXML(id);
+  } else {
+    console.log("Invalid object type!");
+    return;
+  }
+  nodeMeasuringDevice = getNodeByTagName(this.XML, "MeasuringDeviceV2");
+
+  this.MeasuringDeviceId = getValue(nodeMeasuringDevice, "MeasuringDeviceId");
+
+  this.Description = getValue(nodeMeasuringDevice, "Description");
+  this.IsCalibrator = getValue(nodeMeasuringDevice, "IsCalibrator");
+  this.InternalTest = getValue(nodeMeasuringDevice, "InternalTest");
+  this.CheckDateInterval = getValue(nodeMeasuringDevice, "CheckDateInterval");
+  this.CheckUsageCount = getValue(nodeMeasuringDevice, "CheckUsageCount");
+  this.MeasuringDeviceStateAfterCalibration = getValue(nodeMeasuringDevice, "MeasuringDeviceStateAfterCalibration");
+  this.DatasetState = getValue(nodeMeasuringDevice, "DatasetState");
+  this.MeasuringRangeMin = getValue(nodeMeasuringDevice, "MeasuringRangeMin");
+  this.MeasuringRangeMax = getValue(nodeMeasuringDevice, "MeasuringRangeMax");
+  this.MainTestValue = getValue(nodeMeasuringDevice, "MainTestValue");
+  this.MeasuringDeviceType = getValue(nodeMeasuringDevice, "MeasuringDeviceType");
+  this.MainTestValueUpperTol = getValue(nodeMeasuringDevice, "MainTestValueUpperTol");
+  this.MainTestValueLowerTol = getValue(nodeMeasuringDevice, "MainTestValueLowerTol");
+  this.MeasuringPrecision = getValue(nodeMeasuringDevice, "MeasuringPrecision");
+  this.InvFullCopy = getValue(nodeMeasuringDevice, "InvFullCopy");
+}
+
+function ZollerStorage(id) {
+  if (id == undefined) {
+    this.StorageId = "";
+    this.GetZollerData = function (id) {
+      return new ZollerStorage(id);
+    }
+  }
+
+  this.XML;
+  this.SetXML = function (xml) {
+    this.XML = xml;
+    if (xml.firstChild != null && xml.firstChild.hasAttribute != null) {
+      if (xml.firstChild.hasAttribute("result")) {
+        if (xml.firstChild.getAttribute("result") == "fail") {
+          console.log("Invalid response from TMS!");
+        }
+      }
+    }
+  }
+
+  console.log("Object type is: ", (typeof id));
+  var nodeStorage;
+  if ((typeof id) == "string") {
+    this.XML = _WebRequest("GET", "Storage/" + id + "?LoadSubData=true", this.SetXML);
+  } else if ((typeof id) == "object") {
+    this.SetXML(id);
+  } else {
+    console.log("Invalid object type!");
+    return;
+  }
+  nodeStorage = getNodeByTagName(this.XML, "Storage");
+
+  this.StorageId = getValue(nodeStorage, "StorageId");
+
+  this.Width = getValue(nodeStorage, "Width");
+  this.Height = getValue(nodeStorage, "Height");
+  this.Depth = getValue(nodeStorage, "Depth");
+  this.ExternalSystemControl = getValue(nodeStorage, "ExternalDocument");
+  this.Type = getValue(nodeStorage, "Type");
+  this.CirculationControl = getValue(nodeStorage, "CirculationControl");
+  this.IsStockOrderNeeded = getValue(nodeStorage, "IsStockOrderNeeded");
+  this.DatasetState = getValue(nodeStorage, "DatasetState");
+  var sp = getNode(nodeStorage, "StoragePlace");
+  this.StoragePlace = {
+    StoragePlaceBaseId: getValue(sp, "StoragePlaceBaseId"),
+    Description: getValue(sp, "Description")
+  }
 }
 
 // **************************************************************************
@@ -927,6 +1208,23 @@ function getNodeByTagName(xml, name) {
   return undefined;
 }
 
+function convertToPlain(rtf) {
+  if (rtf != undefined) {
+    rtf = rtf.replace(/\\par[d]?/g, "");
+    return rtf.replace(/\{\*?\\[^{}]+}|[{}]|\\\n?[A-Za-z]+\n?(?:-?\d+)?[ ]?/g, "").trim();
+  } else {
+    return "";
+  }
+}
+function convertToRtf(plain) {
+  if (plain != undefined) {
+    plain = plain.replace(/\n/g, "\\par\n");
+    return "{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang2057{\\fonttbl{\\f0\\fnil\\fcharset0 Microsoft Sans Serif;}}\n\\viewkind4\\uc1\\pard\\f0\\fs17 " + plain + "\\par\n}";
+  } else {
+    return "";
+  }
+}
+
 // **************************************************************************
 // *******************************Web Request*******************************
 //
@@ -1029,6 +1327,18 @@ function RaiseComponentSelectedEvent(Component, Tool) {
   evt.ComponentId = Component;
   document.dispatchEvent(evt);
 }
+function RaiseToolSelectedEvent(Tool) {
+  var evt = document.createEvent("Events");
+  evt.initEvent("toolselected", true, true);
+  evt.ToolId = Tool;
+  document.dispatchEvent(evt);
+}
+function RaiseFixtureSelectedEvent(Fixture) {
+  var evt = document.createEvent("Events");
+  evt.initEvent("fixtureselected", true, true);
+  evt.FixtureId = Fixture;
+  document.dispatchEvent(evt);
+}
 
 var dragSrcEl = null;
 function handleDragStart(e) {
@@ -1103,19 +1413,20 @@ function toggleEdit(state) {
   });
 }
 function deleteComponent(e) {
-  console.log("Deleting '" + e.target.parentElement.dataset.component + "' from '" + e.target.parentElement.dataset.tool + "'", e.target.parentElement);
   RaiseComponentDeleteEvent(e.target.parentElement.dataset.component, e.target.parentElement.dataset.tool);
+  e.preventDefault();
 }
 function deleteTool(e) {
-  console.log("Deleting '" + e.target.parentElement.dataset.tool + "'", e.target.parentElement);
   RaiseToolDeleteEvent(e.target.parentElement.dataset.tool);
+  e.preventDefault();
 }
 function selectedComponent(e) {
+  // Double check that another function wasn't intended
+  if (e.target.tagName == "A") { return false }
   var d = e.target;
-  while (d.tagName != "div" && d.getAttribute("class") != "assembly-item") {
+  while (d.getAttribute("class") != "assembly-item") {
     d = d.parentElement;
   }
-  console.log("Selected '" + d.dataset.component + "' from '" + d.dataset.tool + "'", d);
   RaiseComponentSelectedEvent(d.dataset.component, d.dataset.tool)
 }
 
@@ -1143,10 +1454,36 @@ function setHandlers() {
   });
   cols = document.querySelectorAll(".assembly-name");
   [].forEach.call(cols, function (col) {
-    col.onclick = function () { this.classList.toggle("clicked"); }
+    col.onclick = function (e) {
+      // Place event here
+      // Double check that another function wasn't intended
+      if (e.target.getAttribute("class") === null) {
+        this.classList.toggle("clicked");
+        RaiseToolSelectedEvent(this.dataset.tool);
+      } else if (e.target.getAttribute("class").indexOf("assembly-name") > -1) {
+        this.classList.toggle("clicked");
+        RaiseToolSelectedEvent(this.dataset.tool);
+      }
+    }
   });
   cols = document.querySelectorAll(".add-component");
   [].forEach.call(cols, function (col) {
-    col.onclick = function (e) { RaiseComponentAddEvent(e.target.parentElement.dataset.tool) };
+    col.onclick = function (e) {
+      RaiseComponentAddEvent(e.target.parentElement.dataset.tool)
+    };
+  });
+  cols = document.querySelectorAll(".fixture");
+  [].forEach.call(cols, function (col) {
+    col.onclick = function (e) {
+      // Place event here
+      // Double check that another function wasn't intended
+      if (e.target.getAttribute("class") === null) {
+        this.classList.toggle("clicked");
+        RaiseFixtureSelectedEvent(this.dataset.fixture);
+      } else if (e.target.getAttribute("class").indexOf("fixture-name") > -1) {
+        this.classList.toggle("clicked");
+        RaiseFixtureSelectedEvent(this.dataset.fixture);
+      }
+    }
   });
 }
