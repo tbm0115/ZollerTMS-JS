@@ -1129,12 +1129,14 @@ function ZollerGraphicImage(file, group) {
   this.FileName = file;
   this.GraphicGroup = group;
   var img = new Image(_imageMediumPreviewSize.width, _imageMediumPreviewSize.height);
-  if (this.FileName.endsWith(".dxf") || this.FileName.endsWith(".stp")) {
-    this.ImageURL = _WebServiceBaseURL + "Graphic/" + this.GraphicGroup + "/" + this.FileName + "?w=800&h=600";
-    img.src = _WebServiceBaseURL + "Graphic/" + this.GraphicGroup + "/" + this.FileName + "?w=" + _imageMediumPreviewSize.width + "&h=" + _imageMediumPreviewSize.height;
-  } else {
-    this.ImageURL = _WebServiceBaseURL + "Graphic/" + this.GraphicGroup + "/" + this.FileName;
-    img.src = this.ImageURL;
+  if (this.FileName != undefined && this.GraphicGroup != undefined) {
+    if (this.FileName.endsWith(".dxf") || this.FileName.endsWith(".stp")) {
+      this.ImageURL = _WebServiceBaseURL + "Graphic/" + this.GraphicGroup + "/" + this.FileName + "?w=800&h=600";
+      img.src = _WebServiceBaseURL + "Graphic/" + this.GraphicGroup + "/" + this.FileName + "?w=" + _imageMediumPreviewSize.width + "&h=" + _imageMediumPreviewSize.height;
+    } else {
+      this.ImageURL = _WebServiceBaseURL + "Graphic/" + this.GraphicGroup + "/" + this.FileName;
+      img.src = this.ImageURL;
+    }
   }
   img.setAttribute("class", "graphic");
   this.Image = img;
