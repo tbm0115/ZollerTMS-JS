@@ -36,6 +36,9 @@ Most **Zoller%** objects require either the Zoller TMS ID string or the raw XML 
  - ZollerTool
  - ZollerSingleComponent
  - ZollerAccessory
+ - ZollerFixture
+ - ZollerMeasuringDeviceV2
+ - ZollerStorage
 
 The remaining **Zoller%** objects only accept the raw XML of the object's data. These objects include:
 

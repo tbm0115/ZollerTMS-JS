@@ -476,10 +476,10 @@ function ZollerTool(id) {
 
       ass.appendChild(divItem);
     }
-    if (typeof parent !== "undefined" && parent != undefined) {
-      if (overwrite != undefined || overwrite == false) {
+    if (typeof parent !== "undefined" && parent !== undefined) {
+      if (overwrite !== undefined || overwrite == false) {
         var ex = parent.querySelector("[data-tool='" + this.ToolId + "']").parentElement;
-        if (ex != undefined) {
+        if (ex !== undefined) {
           parent.insertBefore(ass, ex);
           parent.removeChild(ex);
         } else {
@@ -859,10 +859,10 @@ function ZollerFixture(id) {
     fixt.appendChild(fixtCol1);
     fixt.appendChild(fixtCol2);
 
-    if (typeof parent !== "undefined" && parent != undefined) {
-      if (overwrite != undefined || overwrite == false) {
+    if (typeof parent !== "undefined" && parent !== undefined) {
+      if (overwrite !== undefined || overwrite == false) {
         var ex = parent.querySelector("[data-fixture='" + this.FixtureId + "']").parentElement;
-        if (ex != undefined) {
+        if (ex !== undefined) {
           parent.insertBefore(fixt, ex);
           parent.removeChild(ex);
         } else {
