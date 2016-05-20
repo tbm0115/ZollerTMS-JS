@@ -1,57 +1,29 @@
-.assembly{
-	position: relative;
-	width: 100%;
-	border-left: 1px outset black;
-	border-right: 1px outset black;
-	display: block;
-	padding: 5px;
-	
+:root{
+	--sizeHeight: 125px;
+	--sizeWidth: calc(var(--sizeHeight) * 1.65);
 	/*http://www.colorzilla.com/gradient-editor/#333333+10,151515+40,151515+60,333333+90*/
-	background: #333333;
-	background: -moz-linear-gradient(top,  #333333 10%, #151515 40%, #151515 60%, #333333 90%);
-	background: -webkit-linear-gradient(top,  #333333 10%,#151515 40%,#151515 60%,#333333 90%);
-	background: linear-gradient(to bottom,  #333333 10%,#151515 40%,#151515 60%,#333333 90%);
-	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#333333', endColorstr='#333333',GradientType=0 );
+	--themeBack: #333333;
+	--themeBack: -moz-linear-gradient(top,  #333333 10%, #151515 40%, #151515 60%, #333333 90%);
+	--themeBack: -webkit-linear-gradient(top,  #333333 10%,#151515 40%,#151515 60%,#333333 90%);
+	--themeBack: linear-gradient(to bottom,  #333333 10%,#151515 40%,#151515 60%,#333333 90%);
+	--themeFilter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#333333', endColorstr='#333333',GradientType=0 );
+}
 
-
-	color: whitesmoke;
-	font-weight: 600;
-	text-shadow: 0.5px 0.5px 0.5px rgba(0, 0, 0, 0.6);
-	overflow-x: auto;
-	overflow-y: hidden;
-	/*overflow: hidden;*/
-	white-space: nowrap;
+.theme-dark{
+	/*http://www.colorzilla.com/gradient-editor/#333333+10,151515+40,151515+60,333333+90*/
+	--themeGradient: #333333;
+	--themeGradient: -moz-linear-gradient(top,  #333333 10%, #151515 40%, #151515 60%, #333333 90%);
+	--themeGradient: -webkit-linear-gradient(top,  #333333 10%,#151515 40%,#151515 60%,#333333 90%);
+	--themeGradient: linear-gradient(to bottom,  #333333 10%,#151515 40%,#151515 60%,#333333 90%);
+	--themeFilter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#333333', endColorstr='#333333',GradientType=0 );
 }
-.assembly:first-child{
-	border-top: 1px solid black;
-	border-top-left-radius: 5px;
-	border-top-right-radius: 5px;
-}
-.assembly:last-child{
-	border-bottom: 1px solid black;
-	border-bottom-left-radius: 5px;
-	border-bottom-right-radius: 5px;
-}
-.assembly-sm{
-	height: 100px;
-	/*font-size: 1em;*/
-}
-.assembly-md{
-	height: 125px;
-	/*font-size: 1.15em;*/
-}
-.assembly-lg{
-	height: 150px;
-	/*font-size: 1.25em;*/
-}
-.assembly-sm > .assembly-name,.assembly-sm > .assembly-item{
-	width: 175px;
-}
-.assembly-md > .assembly-name,.assembly-md > .assembly-item{
-	width: 200px;
-}
-.assembly-lg > .assembly-name,.assembly-lg > .assembly-item{
-	width: 225px;
+.theme-light{
+	/* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#cccccc+10,eaeaea+40,eaeaea+60,cccccc+90 */
+	--themeGradient: #cccccc; /* Old browsers */
+	--themeGradient: -moz-linear-gradient(top,  #cccccc 10%, #eaeaea 40%, #eaeaea 60%, #cccccc 90%); /* FF3.6-15 */
+	--themeGradient: -webkit-linear-gradient(top,  #cccccc 10%,#eaeaea 40%,#eaeaea 60%,#cccccc 90%); /* Chrome10-25,Safari5.1-6 */
+	--themeGradient: linear-gradient(to bottom,  #cccccc 10%,#eaeaea 40%,#eaeaea 60%,#cccccc 90%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+	--themeFilter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#cccccc', endColorstr='#cccccc',GradientType=0 ); /* IE6-9 */
 }
 
 .delete{
@@ -70,10 +42,140 @@
 	content: "remove";
 }
 
+.over{ /* Drag Over */
+	border: 2px dashed black;
+	border-radius: 5px;
+}
+
+.noEdit{
+	display: none;
+}
+.zollerLock{
+	position: absolute;
+	left: 3px;
+	bottom: 3px;
+	width: 24px;
+	height: 24px;
+	background-image: url("http://tms-forum.zoller.info/favicon.ico");
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: 24px 24px;
+}
+
+.flip-item{
+	cursor: pointer;
+	background-image: url("../Site_Images/Flip Item_Down.png");
+	background-size: 16px 16px;
+	width: 16px;
+	height: 16px;
+	position: relative;
+	display: inline-block;
+	background-color: dimgrey;
+	border: 0px outset #333;
+	border-radius: 50%;
+	-moz-transition: all 0.3s linear;
+	-ms-transition: all 0.3s linear;
+	-o-transition: all 0.3s linear;
+	-webkit-transition: all 0.3s linear;
+	transition: all 0.3s linear;
+}
+.flip-item.flipped{
+	-ms-transform: rotat(180deg);
+	-webkit-transform: rotat(180deg);
+	transform: rotate(180deg);
+	background-color: steelblue;
+}
+
+.scroll{
+	position: absolute;
+	display: block;
+	background: none;
+	z-index: 1000;
+	width: 25%;
+	height: 100%;
+	top: 0px;
+}
+.scroll:hover{
+	background-color: rgba(0, 0, 0, 0.25);
+}
+.scroll-left{
+	left: 0px;
+}
+.scroll-right{
+	right: 0px;
+}
+.scroll-container{
+	position: relative;
+	display: block;
+	background: none;
+	width: 100%;
+}
+
+/* *************************************************
+   ****************Assembly Styling****************
+   **************************************************/
+
+.assembly{
+	position: relative;
+	width: 100%;
+	height: var(--sizeHeight);
+	border-left: 1px outset black;
+	border-right: 1px outset black;
+	display: block;
+	padding: 5px;
+	
+	background: var(--themeGradient);
+	filter: var(--themeFilter);
+
+	color: var(--themeFore);
+	font-weight: 600;
+	text-shadow: 0.5px 0.5px 0.5px rgba(0, 0, 0, 0.6);
+	overflow-x: auto;
+	overflow-y: hidden;
+	white-space: nowrap;
+	
+	-webkit-transition: height 0.75s cubic-bezier(.68,-0.55,.27,1.55);
+	-moz-transition: height 0.75s cubic-bezier(.68,-0.55,.27,1.55);
+	-o-transition: height 0.75s cubic-bezier(.68,-0.55,.27,1.55);
+	-ms-transition: height 0.75s cubic-bezier(.68,-0.55,.27,1.55);
+	transition: height 0.75s cubic-bezier(.68,-0.55,.27,1.55);
+}
+.assembly:first-child{
+	border-top: 1px solid black;
+	border-top-left-radius: 5px;
+	border-top-right-radius: 5px;
+}
+.assembly:last-child{
+	border-bottom: 1px solid black;
+	border-bottom-left-radius: 5px;
+	border-bottom-right-radius: 5px;
+}
+.assembly-sm{
+	--sizeHeight: 100px;
+	--sizeWidth: 165px;
+}
+.assembly-md{
+	--sizeHeight: 125px;
+	--sizeWidth: 206.25px;
+}
+.assembly-lg{
+	--sizeHeight: 150px;
+	--sizeWidth: 247.5px;
+}
+.assembly-sm > .assembly-name,.assembly-sm > .assembly-item{
+	width: var(--sizeWidth);
+}
+.assembly-md > .assembly-name,.assembly-md > .assembly-item{
+	width: var(--sizeWidth);
+}
+.assembly-lg > .assembly-name,.assembly-lg > .assembly-item{
+	width: var(--sizeWidth);
+}
+
 .assembly-name{
 	position: relative;
 	display: inline-block;
-	height: 95%;
+	height: calc(var(--sizeHeight) * 0.95);
 	margin-right: 5px;
 	vertical-align: top;
 	border-top-left-radius: 7px;
@@ -113,13 +215,20 @@
 .assembly-name img:first-of-type{
 	position: relative;
 	display: block;
-	width: 50%;
-	height: 45%;
+	--imgAssHeight: 60px;
+	--imgAssHeight: calc(var(--sizeHeight) * 0.4);
+	--imgAssHeight: -webkit-calc(var(--sizeHeight) * 0.4);
+	--imgAssHeight: -moz-calc(var(--sizeHeight) * 0.4);
+	width: var(--imgAssHeight);
+	width: calc(var(--imgAssHeight) * 2.25);
+	width: -webkit-calc(var(--imgAssHeight) * 2.25);
+	width: -moz-calc(var(--imgAssHeight) * 2.25);
+	height: var(--imgAssHeight);
 	margin-left: auto;
 	margin-right: auto;
-	bottom: -1.25em;
 	border: 2px ridge #333;
 	border-radius: 3px;
+	top: 1.15em;
 }
 .assembly-name .id{
 	position: absolute;
@@ -133,17 +242,21 @@
 	font-size: 50%;
 }
 .assembly-name .childcount::after{
-	content: " components";
+	content: " component(s)";
+}
+.assembly-name .accessorycount{
+	position: absolute;
+	bottom: 5em;
+	font-size: 50%;
+	width: calc(var(--sizeWidth) / 5);
 }
 
 .assembly-item{
 	position: relative;
 	display: inline-block;
-	height: 95%;
+	height: calc(var(--sizeHeight) * 0.95);
 	top: 0px;
 	left: 0px;
-	/*margin-right: 5px;
-	border: 1px dashed black;*/
 	vertical-align: top;
 	border-top: 1px inset;
 	border-bottom: 1px inset;
@@ -164,11 +277,6 @@
 .assembly-item:hover{
 	top: -2px;
 	left: -2px;
-	background: #333333;
-	background: -moz-linear-gradient(top,  #333333 0%, #666666 50%, #333333 100%);
-	background: -webkit-linear-gradient(top,  #333333 0%,#666666 50%,#333333 100%);
-	background: linear-gradient(to bottom,  #333333 0%,#666666 50%,#333333 100%);
-	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#333333', endColorstr='#333333',GradientType=0 );
 	cursor: pointer;
 	box-shadow: 3px 3px rgba(0, 0, 0, 0.5);
 }
@@ -196,27 +304,14 @@
 	color: inherit;
 }
 .assembly-item img:first-of-type{ /* Main Image */
-	/* This is incase the object is not 'TrueZoller' object, which should have Zoller Icon */
 	border: 2px ridge #101010;
 	border-radius: 3px;
-}
-
-.over{ /* Drag Over */
-	border: 2px dashed black;
-	border-radius: 5px;
-}
-
-.item-image{
 	position: relative;
 	display: block;
 	margin-left: auto;
 	margin-right: auto;
 	width: 50%;
-	height: 50%;
-}
-.item-image img:first-of-type{
-	width: 100%;
-	height: 100%;
+	height: calc(var(--sizeHeight) / 2);
 }
 
 .add-component{
@@ -235,35 +330,6 @@
 }
 .add-component:hover{
 	color: rgba(255, 255, 255, 1) !important;
-}
-
-.noEdit{
-	display: none;
-}
-
-.scroll{
-	position: absolute;
-	display: block;
-	background: none;
-	z-index: 1000;
-	width: 25%;
-	height: 100%;
-	top: 0px;
-}
-.scroll:hover{
-	background-color: rgba(0, 0, 0, 0.25);
-}
-.scroll-left{
-	left: 0px;
-}
-.scroll-right{
-	right: 0px;
-}
-.scroll-container{
-	position: relative;
-	display: block;
-	background: none;
-	width: 100%;
 }
 
 .tool-check{
@@ -313,110 +379,403 @@
 	margin: 3px;
 }
 
-.zollerTool{
-	position: absolute;
-	left: 3px;
-	bottom: 3px;
-	width: 24px;
-	height: 24px;
-	background-image: url("http://tms-forum.zoller.info/favicon.ico");
-	background-position: center;
-	background-repeat: no-repeat;
-	background-size: 24px 24px;
-}
+/* *************************************************
+   *****************Fixture Styling*****************
+   ************************************************* */
 
 .fixture{
 	position: relative;
-	width: 100%;
+	width: 99%;
+	height: var(--sizeHeight);
 	border-left: 1px outset black;
 	border-right: 1px outset black;
 	display: block;
 	padding: 5px;
 	
-	/*http://www.colorzilla.com/gradient-editor/#333333+10,151515+40,151515+60,333333+90*/
-	background: #333333;
-	background: -moz-linear-gradient(top,  #333333 10%, #151515 40%, #151515 60%, #333333 90%);
-	background: -webkit-linear-gradient(top,  #333333 10%,#151515 40%,#151515 60%,#333333 90%);
-	background: linear-gradient(to bottom,  #333333 10%,#151515 40%,#151515 60%,#333333 90%);
-	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#333333', endColorstr='#333333',GradientType=0 );
+	background: var(--themeGradient);
+	filter: var(--themeFilter);
 
-
-	color: whitesmoke;
+	color: var(--themeFore);
 	font-weight: 600;
 	text-shadow: 0.5px 0.5px 0.5px rgba(0, 0, 0, 0.6);
 	overflow-x: auto;
 	overflow-y: hidden;
-	/*overflow: hidden;*/
 	white-space: nowrap;
+	
+	-webkit-transition: height 0.75s cubic-bezier(.68,-0.55,.27,1.55);
+	-moz-transition: height 0.75s cubic-bezier(.68,-0.55,.27,1.55);
+	-o-transition: height 0.75s cubic-bezier(.68,-0.55,.27,1.55);
+	-ms-transition: height 0.75s cubic-bezier(.68,-0.55,.27,1.55);
+	transition: height 0.75s cubic-bezier(.68,-0.55,.27,1.55);
 }
+.fixture-sm{
+	--sizeHeight: 100px;
+  --sizeWidth: 200px;
+	/*--sizeWidth: calc(var(--sizeHeight) * 2);
+	--sizeWidth: -webkit-calc(var(--sizeHeight) * 2);
+	--sizeWidth: -moz-calc(var(--sizeHeight) * 2);*/
+}
+.fixture-md{
+	--sizeHeight: 125px;
+  --sizeWidth: 250px;
+	/*--sizeWidth: calc(var(--sizeHeight) * 2);
+	--sizeWidth: -webkit-calc(var(--sizeHeight) * 2);
+	--sizeWidth: -moz-calc(var(--sizeHeight) * 2);*/
+}
+.fixture-lg{
+	--sizeHeight: 150px;
+  --sizeWidth: 300px;
+	/*--sizeWidth: calc(var(--sizeHeight) * 2);
+	--sizeWidth: -webkit-calc(var(--sizeHeight) * 2);
+	--sizeWidth: -moz-calc(var(--sizeHeight) * 2);*/
+}
+.fixture .fixture{
+	background: none;
+	border: none;
+}
+
 .fixture-name{
 	position: relative;
 	display: inline-block;
-	height: 95%;
+	height: calc(var(--sizeHeight) * 0.95);
 	width: 25%;
+	width: var(--sizeWidth);
 	margin-right: 5px;
 	vertical-align: top;
 	border-top-left-radius: 7px;
 	border-bottom-left-radius: 7px;
 	border: 1px outset black;
+	cursor: pointer;
 }
-.fixture-item{
-	position: relative;
-	display: inline-block;
-	height: 95%;
-	width: 60%;
-	top: 0px;
-	left: 0px;
-	/*margin-right: 5px;
-	border: 1px dashed black;*/
-	vertical-align: top;
-	border-top: 1px inset;
-	border-bottom: 1px inset;
-	-webkit-transation: top 1s, left 1s;
-	transition-property: top, left;
-	transition-duration: 0.3s;
+.fixture-name:hover{
+	top: -0.5px;
+	left: -0.5px;
+	cursor: pointer;
+	box-shadow: 1px 1px rgba(0, 0, 0, 0.5);
 }
-.fixture-sm{
-	height: 100px;
-	/*font-size: 1em;*/
-}
-.fixture-md{
-	height: 125px;
-	/*font-size: 1.15em;*/
-}
-.fixture-lg{
-	height: 150px;
-	/*font-size: 1.25em;*/
-}
-/*.fixture-sm > .fixture-name,.fixture-sm > .fixture-item{
-	width: 175px;
-}
-.fixture-md > .fixture-name,.fixture-md > .fixture-item{
-	width: 200px;
-}
-.fixture-lg > .fixture-name,.fixture-lg > .fixture-item{
-	width: 225px;
-}
-*/
 .fixture-name p{
 	margin: 0;
+	overflow: hidden;
+	text-align: center;
+	text-overflow: clip;
+	text-overflow: "...";
+	text-overflow: ellipsis;
 }
 .fixture-name img{
 	position: relative;
 	display: block;
-	width: 50%;
-	height: 75%;
+	--imgFixtHeight: 75px;
+	--imgFixtHeight: calc(var(--sizeHeight) * 0.6);
+	--imgFixtHeight: -webkit-calc(var(--sizeHeight) * 0.6);
+	--imgFixtHeight: -moz-calc(var(--sizeHeight) * 0.6);
+	width: var(--imgFixtHeight);
+	width: calc(var(--imgFixtHeight) * 2.25);
+	width: -webkit-calc(var(--imgFixtHeight) * 2.25);
+	width: -moz-calc(var(--imgFixtHeight) * 2.25);
+	height: var(--imgFixtHeight);
 	margin-left: auto;
 	margin-right: auto;
-	/*bottom: -1.25em;*/
 	border: 2px ridge #333;
 	border-radius: 3px;
+}
+.fixture-name .childcount{
+	position: absolute;
+	bottom: 2.5em;
+	font-size: 50%;
+	width: calc(var(--sizeWidth) / 4);
+}
+.fixture-name .childcount::after{
+	content: " sub-fixture(s)";
+}
+.fixture-name .accessorycount{
+	position: absolute;
+	bottom: 5em;
+	font-size: 50%;
+	width: calc(var(--sizeWidth) / 4);
+}
+
+.fixture-item{
+	position: relative;
+	display: inline-block;
+	height: 125px;
+	height: calc(var(--sizeHeight) * 0.95);
+	width: calc(100% - var(--sizeWidth) - 2%);
+	top: 0px;
+	left: 0px;
+	vertical-align: top;
+	overflow: auto;
 }
 .fixture-item textarea{
 	position: relative;
 	display: block;
-	width: 100%;
-	height: 100%;
+	width: 95%;
+	height: calc(var(--sizeHeight) * 0.85);
+  margin: auto;
+  overflow: auto;
 	border: 1px solid black;
 	border-radius: 4px;
+	color: #333;
+	text-shadow: 2px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.fixture-sub{
+	position: relative;
+	display: none;
+	margin-left: 5%;
+	width: 94%;
+}
+.fixture-sub.show{
+	display: block;
+}
+.fixture-sub::before{
+	content: "Sub-Fixtures";
+	position: absolute;
+	left: -4em;
+	top: calc(var(--sizeWidth) / 5);
+	display: inline-block;
+	transform: rotate(-90deg);
+}
+
+/* *************************************************
+   ****************Accessory Styling****************
+   ************************************************* */
+
+.accessory{
+	position: relative;
+	width: var(--sizeWidth);
+	height: var(--sizeHeight);
+	border: 1px outset black;
+	display: inline-block;
+	padding: 5px;
+	
+	background: var(--themeGradient);
+	filter: var(--themeFilter);
+
+	color: var(--themeFore);
+	font-weight: 600;
+	text-shadow: 0.5px 0.5px 0.5px rgba(0, 0, 0, 0.6);
+	white-space: nowrap;
+}
+.accessory-sm{
+	--sizeHeight: 100px;
+  --sizeWidth: 125px;
+}
+.accessory-md{
+	--sizeHeight: 125px;
+  --sizeWidth: 156.25px;
+}
+.accessory-lg{
+	--sizeHeight: 150px;
+  --sizeWidth: 187.5px;
+}
+
+.accessory-name{
+	position: relative;
+	display: block;
+	height: calc(var(--sizeHeight) * 0.95);
+	width: calc(var(--sizeWidth) * 0.95);
+	vertical-align: top;
+	border-radius: 7px;
+	border: 1px outset black;
+	cursor: pointer;
+}
+.accessory-name:hover{
+	top: -0.5px;
+	left: -0.5px;
+	cursor: pointer;
+	box-shadow: 1px 1px rgba(0, 0, 0, 0.5);
+}
+.accessory-name p{
+	position: relative;
+	display: block;
+	/*border: 1px dashed black;*/
+	text-align: left;
+	padding-left: 10px;
+	height: calc(var(--sizeHeight) / 6);
+	margin: 0px;
+	width: 100%;
+	overflow: hidden;
+	text-overflow: clip;
+	text-overflow: "...";
+	text-overflow: ellipsis;
+}
+.accessory-name img{
+	position: relative;
+	display: block;
+	width: 95%;
+	height: 100px;
+	height: calc(var(--sizeHeight) / 1.8);
+	margin: auto;
+	border: 2px ridge #333;
+	border-radius: 3px;
+}
+
+.accessory-item{
+	display: none;
+	height: 0px;
+	width: 0px;
+}
+.accessory-item label{
+	
+}
+.accessory-item input{
+	
+}
+.accessory-item textarea{
+	
+}
+
+.accessory-sub{
+	position: relative;
+	display: none;
+	margin-left: 5%;
+	width: 94%;
+}
+.accessory-sub.show{
+	display: block;
+}
+.accessory-sub::before{
+	content: "Accessories";
+	position: absolute;
+	left: -4em;
+	top: calc(var(--sizeWidth) / 5);
+	display: inline-block;
+	transform: rotate(-90deg);
+}
+.accessorycount::after{
+	content: " accessory(ies)";
+}
+
+/* *************************************************
+   *****************Measure Styling*****************
+   ************************************************* */
+
+.measure{
+	position: relative;
+	width: 99%;
+	height: var(--sizeHeight);
+	border-left: 1px outset black;
+	border-right: 1px outset black;
+	display: block;
+	padding: 5px;
+	
+	background: var(--themeGradient);
+	filter: var(--themeFilter);
+
+	color: var(--themeFore);
+	font-weight: 600;
+	text-shadow: 0.5px 0.5px 0.5px rgba(0, 0, 0, 0.6);
+	overflow-x: auto;
+	overflow-y: hidden;
+	white-space: nowrap;
+	
+	-webkit-transition: height 0.75s cubic-bezier(.68,-0.55,.27,1.55);
+	-moz-transition: height 0.75s cubic-bezier(.68,-0.55,.27,1.55);
+	-o-transition: height 0.75s cubic-bezier(.68,-0.55,.27,1.55);
+	-ms-transition: height 0.75s cubic-bezier(.68,-0.55,.27,1.55);
+	transition: height 0.75s cubic-bezier(.68,-0.55,.27,1.55);
+}
+.measure-sm{
+	--sizeHeight: 100px;
+  --sizeWidth: 200px;
+}
+.measure-md{
+	--sizeHeight: 125px;
+  --sizeWidth: 250px;
+}
+.measure-lg{
+	--sizeHeight: 150px;
+  --sizeWidth: 300px;
+}
+
+.measure-name{
+	position: relative;
+	display: inline-block;
+	height: 125px;
+	height: var(--sizeHeight);
+	height: calc(var(--sizeHeight) * 0.95);
+	height: -webkit-calc(var(--sizeHeight) * 0.95);
+	height: -moz-calc(var(--sizeHeight) * 0.95);
+	width: 25%;
+	width: var(--sizeWidth);
+	margin-right: 5px;
+	vertical-align: top;
+	border-top-left-radius: 7px;
+	border-bottom-left-radius: 7px;
+	border: 1px outset black;
+	cursor: pointer;
+}
+.measure-name:hover{
+	top: -0.5px;
+	left: -0.5px;
+	cursor: pointer;
+	box-shadow: 1px 1px rgba(0, 0, 0, 0.5);
+}
+.measure-name p{
+	margin: 0;
+	overflow: hidden;
+	text-align: center;
+	text-overflow: clip;
+	text-overflow: "...";
+	text-overflow: ellipsis;
+}
+.measure-name img{
+	position: relative;
+	display: block;
+	--imgFixtHeight: 75px;
+	--imgFixtHeight: calc(var(--sizeHeight) * 0.6);
+	--imgFixtHeight: -webkit-calc(var(--sizeHeight) * 0.6);
+	--imgFixtHeight: -moz-calc(var(--sizeHeight) * 0.6);
+	width: var(--imgFixtHeight);
+	width: calc(var(--imgFixtHeight) * 2.25);
+	width: -webkit-calc(var(--imgFixtHeight) * 2.25);
+	width: -moz-calc(var(--imgFixtHeight) * 2.25);
+	height: var(--imgFixtHeight);
+	margin-left: auto;
+	margin-right: auto;
+	border: 2px ridge #333;
+	border-radius: 3px;
+}
+.measure-name .childcount{
+	position: absolute;
+	bottom: 2.5em;
+	font-size: 50%;
+	width: calc(var(--sizeWidth) / 4);
+}
+.measure-name .childcount::after{
+	content: " sub-measure(s)";
+}
+.measure-name .accessorycount{
+	position: absolute;
+	bottom: 5em;
+	font-size: 50%;
+	width: calc(var(--sizeWidth) / 4);
+}
+
+.measure-item{
+	position: relative;
+	display: inline-block;
+	height: 125px;
+	height: var(--sizeHeight);
+	height: calc(var(--sizeHeight) * 0.95);
+	width: 60%;
+	width: calc(100% - var(--sizeWidth) - 10px);
+	width: -webkit-calc(100% - var(--sizeWidth) - 10px);
+	width: -moz-calc(100% - var(--sizeWidth) - 10px);
+	top: 0px;
+	left: 0px;
+	vertical-align: top;
+	overflow: auto;
+}
+.measure-item textarea{
+	position: relative;
+	display: block;
+	width: 99%;
+	height: 99%;
+  margin: auto;
+  overflow: auto;
+	border: 1px solid black;
+	border-radius: 4px;
+	color: #333;
+	text-shadow: 2px 1px 2px rgba(0, 0, 0, 0.5);
 }

@@ -34,10 +34,14 @@ Most **Zoller%** objects require either the Zoller TMS ID string or the raw XML 
  - ZollerMachine
  - ZollerSettingSheet
  - ZollerTool
+  - DrawHTML()
  - ZollerSingleComponent
  - ZollerAccessory
+  - DrawHTML()
  - ZollerFixture
+  - DrawHTML()
  - ZollerMeasuringDeviceV2
+  - DrawHTML()
  - ZollerStorage
 
 The remaining **Zoller%** objects only accept the raw XML of the object's data. These objects include:

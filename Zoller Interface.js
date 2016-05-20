@@ -42,7 +42,6 @@ var _imageMediumPreviewSize = { width: 75, height: 75 };
 var _imageSmallPreviewSize = { width: 50, height: 50 };
 var _interfaceSizes = ["sm", "md", "lg"];
 var _DefaultInterfaceSize = _interfaceSizes[2];
-
 // **************************************************************************
 // ***************************Web Service Objects***************************
 //
@@ -386,9 +385,9 @@ function ZollerTool(id) {
   }
 
   // This function generates the HTML to be added to the document. 'Size' represents the preferred sizing of the interface for the user. The available options are 'sm', 'md', and 'lg'. These can be adjusted in 'Zoller Interface.css'.
-  this.DrawHTML = function (size, parent, overwrite) {
+  this.DrawHTML = function (size, theme, parent, overwrite) {
     var ass = document.createElement("div");
-    ass.setAttribute("class", "assembly assembly-" + size);
+    ass.setAttribute("class", "assembly assembly-" + size + " theme-" + theme);
 
     var divName = document.createElement("div");
     divName.setAttribute("class", "assembly-name");
@@ -399,21 +398,24 @@ function ZollerTool(id) {
     var divId = document.createElement("span");
     divId.setAttribute("class", "id");
     divId.innerHTML = this.ToolId;
-    divId.setAttribute("title", "Tool Id");
+    divId.setAttribute("title", "Tool Id: " + this.ToolId);
     divName.appendChild(divId);
 
-    var divCnt = document.createElement("span");
-    divCnt.setAttribute("class", "childcount");
-    divCnt.innerHTML = this.SingleComponents.length;
-    divName.appendChild(divCnt);
+    if (this.SingleComponents.length > 0) {
+      var divCnt = document.createElement("span");
+      divCnt.setAttribute("class", "childcount");
+      divCnt.innerHTML = this.SingleComponents.length;
+      divName.appendChild(divCnt);
+    }
 
     var pName = document.createElement("p");
+    pName.setAttribute("title", this.Description);
     pName.innerHTML = this.Description;
     divName.appendChild(pName);
 
     var imgName = document.createElement("img");
     if (this.Images.length > 0) {
-      imgName.src = this.Images[0].GetCustomImageURL(800, 600);
+      imgName.src = this.Images[0].ImageURL;
     }
     divName.appendChild(imgName);
 
@@ -423,7 +425,8 @@ function ZollerTool(id) {
       divName.appendChild(delName);
     } else {
       var zolIcon = document.createElement("span");
-      zolIcon.setAttribute("class", "zollerTool");
+      zolIcon.setAttribute("class", "zollerLock");
+      zolIcon.setAttribute("title", "This item is managed through Zoller TMS and relevant data cannot be edited.")
       zolIcon.onclick = function (e) {
         MessageBox.Show("This is a tool assembly managed by Zoller TMS. The tool can only be modified or removed from the Setup Sheet via the Zoller TMS interface.",
           "Tool Locked", MessageBox.BoxType.Okay, "info", undefined);
@@ -437,6 +440,17 @@ function ZollerTool(id) {
       //btnName.setAttribute("type", "button");
       btnName.setAttribute("class", "add-component");
       divName.appendChild(btnName);
+    }
+
+    if (this.Accessories.length > 0) {
+      // Draw drop-down button for sub-fixtures
+      var toolAccCount = document.createElement("span");
+      toolAccCount.setAttribute("class", "accessorycount");
+      var toolAccDropCount = document.createElement("a");
+      toolAccDropCount.setAttribute("class", "flip-item");
+      toolAccCount.appendChild(toolAccDropCount);
+      toolAccCount.innerHTML += this.Accessories.length;
+      divName.appendChild(toolAccCount);
     }
 
     ass.appendChild(divName);
@@ -476,6 +490,17 @@ function ZollerTool(id) {
 
       ass.appendChild(divItem);
     }
+
+    if (this.Accessories.length > 0) {
+      // Draw accessories
+      var toolCol4 = document.createElement("div");
+      toolCol4.setAttribute("class", "accessory-sub");
+      for (var len = this.Accessories.length, n = 0; n < len; n++) {
+        toolCol4.appendChild(this.Accessories[n].DrawHTML("sm", theme))
+      }
+      ass.appendChild(toolCol4);
+    }
+
     if (typeof parent !== "undefined" && parent !== undefined) {
       if (overwrite !== undefined || overwrite == false) {
         var ex = parent.querySelector("[data-tool='" + this.ToolId + "']").parentElement;
@@ -490,9 +515,8 @@ function ZollerTool(id) {
         parent.appendChild(ass);
         setHandlers();
       }
-    } else {
-      return ass;
     }
+    return ass;
   }
 
   this.Notes = ""; // Custom property
@@ -688,7 +712,7 @@ function ZollerSingleComponent(id) {
         this.Images.push(new ZollerGraphicImage(nodeComponent.children[n].innerHTML, nodeComponent.children[n + 1].innerHTML));
       }
     }
-    // Get Accessories of the Tool
+    // Get Accessories of the Single Component
     if (nodeComponent.children[n].tagName == "Article") {
       var cmpnts = getNodes(nodeComponent.children[n], "Accessory");
       if (cmpnts != undefined) {
@@ -699,7 +723,7 @@ function ZollerSingleComponent(id) {
         console.log("No accessories found in Article Data");
       }
     }
-    // Get Documents of the Tool
+    // Get Documents of the Single Component
     if (nodeComponent.children[n].tagName == "ExternalDocument") {
       var cmpnts = getNodes(nodeComponent.children[n], "Document");
       if (cmpnts != undefined) {
@@ -743,6 +767,78 @@ function ZollerAccessory(id) {
     }
   }
 
+  this.DrawHTML = function (size, theme, parent, overwrite) {
+    var divMain = document.createElement("div");
+    divMain.setAttribute("class", "accessory accessory-" + size + " theme-" + theme);
+    divMain.setAttribute("data-accessory", this.AccessoryId);
+
+    var divName = document.createElement("div");
+    divName.setAttribute("class", "accessory-name");
+
+    var pId = document.createElement("p");
+    pId.innerHTML = this.AccessoryId;
+    divName.appendChild(pId);
+
+    var pDescription = document.createElement("p");
+    pDescription.innerHTML = this.Description;
+    divName.appendChild(pDescription);
+
+    var imgName = document.createElement("img");
+    if (this.Image != undefined && typeof this.Image != "undefined") {
+      imgName.src = this.Image.ImageURL;
+    }
+    divName.appendChild(imgName);
+
+    var divDetails = document.createElement("div");
+    divDetails.setAttribute("class", "accessory-item");
+
+    var lbl = document.createElement("label");
+    lbl.innerHTML = "Standard";
+    var txt = document.createElement("input");
+    txt.setAttribute("type", "text");
+    txt.disabled = true;
+    txt.value = this.Standard;
+    divDetails.appendChild(lbl);
+    divDetails.appendChild(txt);
+    
+    var lbl = document.createElement("label");
+    lbl.innerHTML = "Lifetime";
+    var txt = document.createElement("input");
+    txt.setAttribute("type", "text");
+    txt.disabled = true;
+    txt.value = this.Lifetime;
+    divDetails.appendChild(lbl);
+    divDetails.appendChild(txt);
+    
+    var lbl = document.createElement("label");
+    lbl.innerHTML = "Notes";
+    var txt = document.createElement("textarea");
+    txt.disabled = true;
+    txt.value = this.LongComment;
+    divDetails.appendChild(lbl);
+    divDetails.appendChild(txt);
+
+    divMain.appendChild(divName);
+    divMain.appendChild(divDetails);
+
+    if (typeof parent !== "undefined" && parent !== undefined) {
+      if (overwrite !== undefined || overwrite == false) {
+        var ex = parent.querySelector("[data-accessory='" + this.AccessoryId + "']").parentElement;
+        if (ex !== undefined) {
+          parent.insertBefore(divMain, ex);
+          parent.removeChild(ex);
+        } else {
+          parent.appendChild(divMain);
+        }
+        setHandlers();
+      } else {
+        parent.appendChild(divMain);
+        setHandlers();
+      }
+    }
+    return divMain;
+  }
+
   console.log("Object type is: ", (typeof id));
   var nodeAccessory;
   if ((typeof id) == "string") {
@@ -759,6 +855,9 @@ function ZollerAccessory(id) {
 
   this.Description = getValue(nodeAccessory, "Description");
   this.LongComment = convertToPlain(getValue(nodeAccessory, "LongComment"));
+  this.Standard = getValue(nodeAccessory, "Norm");
+  this.Lifetime = getValue(nodeAccessory, "Lifetime");
+  this.Image = new ZollerGraphicImage(getValue(nodeAccessory, "GraphicFile"), getValue(nodeAccessory, "GraphicGroup"));
 }
 
 function ZollerFixture(id) {
@@ -780,6 +879,127 @@ function ZollerFixture(id) {
         }
       }
     }
+  }
+
+  this.GetJSON = function () {
+    var out = "{\"id\":\"" + this.FixtureId + "\",";
+    out += "\"Notes\":\"" + this.Notes + "\",";
+    out += "\"PalletJawNo\":\"" + this.PalletJawNo + "\",";
+    out += "\"ClampingPressure\":\"" + this.ClampingPressure + "\",";
+    out += "\"ClampingDiagram\":\"" + this.ClampingDiagram + "\",";
+    out += "\"Remark\":\"" + this.Remark + "\"";
+    out += "}";
+    return out;
+  }
+
+  this.DrawHTML = function (size, theme, parent, overwrite) {
+    var fixt = document.createElement("div");
+    fixt.setAttribute("class", "fixture fixture-" + size + " theme-" + theme);
+    fixt.setAttribute("data-fixture", this.FixtureId);
+    var fixtCol1 = document.createElement("div");
+    fixtCol1.setAttribute("class", "fixture-name");
+    var fixtName = document.createElement("p");
+    fixtName.innerHTML = "<sup>(" + this.FixtureId + ")</sup> " + this.Description;
+    fixtCol1.appendChild(fixtName);
+    var fixtImg = document.createElement("img");
+    if (this.Image != undefined && typeof this.Image != "undefined") {
+      fixtImg.src = this.Image.ImageURL;
+    }
+    // Check for drop downs
+    if (this.Fixtures.length > 0) {
+      // Draw drop-down button for sub-fixtures
+      var fixtSubCount = document.createElement("span");
+      fixtSubCount.setAttribute("class", "childcount");
+      var fixtSubDropCount = document.createElement("a");
+      fixtSubDropCount.setAttribute("class", "flip-item");
+      fixtSubCount.appendChild(fixtSubDropCount);
+      fixtSubCount.innerHTML += this.Fixtures.length;
+      fixtCol1.appendChild(fixtSubCount);
+    }
+    if (this.Accessories.length > 0) {
+      // Draw drop-down button for sub-fixtures
+      var fixtAccCount = document.createElement("span");
+      fixtAccCount.setAttribute("class", "accessorycount");
+      var fixtAccDropCount = document.createElement("a");
+      fixtAccDropCount.setAttribute("class", "flip-item");
+      fixtAccCount.appendChild(fixtAccDropCount);
+      fixtAccCount.innerHTML += this.Accessories.length;
+      fixtCol1.appendChild(fixtAccCount);
+    }
+    fixtCol1.appendChild(fixtImg);
+
+    // Draw Notes
+    var fixtCol2 = document.createElement("div");
+    fixtCol2.setAttribute("class", "fixture-item");
+    var fixtNotes = document.createElement("textarea");
+    fixtNotes.disabled = true;
+    if (this.Notes != undefined && this.Notes != "") {
+      fixtNotes.value = this.Notes;
+    } else if (this.LongComment != undefined && this.LongComment != "") {
+      fixtNotes.value = "[Zoller Comment] " + this.LongComment;
+    } else if (this.ClampingDescription != undefined && this.ClampingDescription != "") {
+      fixtNotes.value = "[Zoller Clamping] " + this.ClampingDescription;
+    }
+    fixtCol2.appendChild(fixtNotes);
+
+    // Draw Zoller lock if applicable
+    if (!this.IsTrueZoller) {
+      var delName = document.createElement("a");
+      delName.setAttribute("class", "delete");
+      fixtCol1.appendChild(delName);
+    } else {
+      var zolIcon = document.createElement("span");
+      zolIcon.setAttribute("title", "This item is managed through Zoller TMS and relevant data cannot be edited.")
+      zolIcon.setAttribute("class", "zollerLock");
+      zolIcon.onclick = function (e) {
+        MessageBox.Show("This is a fixture managed by Zoller TMS. The fixture can only be modified or removed from the Setup Sheet via the Zoller TMS interface.",
+          "Fixture Locked", MessageBox.BoxType.Okay, "info", undefined);
+        e.preventDefault();
+      }
+      fixtCol1.appendChild(zolIcon);
+    }
+
+    fixt.appendChild(fixtCol1);
+    fixt.appendChild(fixtCol2);
+
+    // Add current instance of a fixture has sub fixtures, then add the HTML
+    if (this.Fixtures.length > 0) {
+      // Draw sub-fixtures
+      var fixtCol3 = document.createElement("div");
+      fixtCol3.setAttribute("class", "fixture-sub");
+      for (var len = this.Fixtures.length, n = 0; n < len; n++) {
+        fixtCol3.appendChild(this.Fixtures[n].DrawHTML("sm", theme))
+      }
+      fixt.appendChild(fixtCol3);
+      fixt.innerHTML += "<hr/>";
+    }
+
+    if (this.Accessories.length > 0) {
+      // Draw accessories
+      var fixtCol4 = document.createElement("div");
+      fixtCol4.setAttribute("class", "accessory-sub");
+      for (var len = this.Accessories.length, n = 0; n < len; n++) {
+        fixtCol4.appendChild(this.Accessories[n].DrawHTML("sm", theme))
+      }
+      fixt.appendChild(fixtCol4);
+    }
+
+    if (typeof parent !== "undefined" && parent !== undefined) {
+      if (overwrite !== undefined || overwrite == false) {
+        var ex = parent.querySelector("[data-fixture='" + this.FixtureId + "']").parentElement;
+        if (ex !== undefined) {
+          parent.insertBefore(fixt, ex);
+          parent.removeChild(ex);
+        } else {
+          parent.appendChild(fixt);
+        }
+        setHandlers();
+      } else {
+        parent.appendChild(fixt);
+        setHandlers();
+      }
+    }
+    return fixt;
   }
 
   console.log("Object type is: ", (typeof id));
@@ -809,72 +1029,50 @@ function ZollerFixture(id) {
   this.InvFullCopy = getValue(nodeFixture, "InvFullCopy");
   this.LongComment = convertToPlain(getValue(nodeFixture, "LongComment"));
   this.Image = new ZollerGraphicImage(getValue(nodeFixture, "GraphicFile"), getValue(nodeFixture, "GraphicGroup"));
-
+  this.Fixtures = [];
+  this.Accessories = [];
+  this.Documents = [];
+  
   this.Notes = ""; // Custom property
   this.PalletJawNo = ""; // Custom property
   this.ClampingPressure = ""; // Custom property
   this.ClampingDiagram = ""; // Custom property
   this.Remark = ""; // Custom property
-	
-  this.GetJSON = function(){
-    var out = "{\"id\":\"" + this.FixtureId + "\",";
-    out += "\"Notes\":\"" + this.Notes + "\",";
-    out += "\"PalletJawNo\":\"" + this.PalletJawNo + "\",";
-    out += "\"ClampingPressure\":\"" + this.ClampingPressure + "\",";
-    out += "\"ClampingDiagram\":\"" + this.ClampingDiagram + "\",";
-    out += "\"Remark\":\"" + this.Remark + "\"";
-    out += "}";
-    return out;
-  }
-	
-  this.DrawHTML = function (size, parent, overwrite) {
-    var fixt = document.createElement("div");
-    fixt.setAttribute("class", "fixture fixture-" + size);
-    fixt.setAttribute("data-fixture", this.FixtureId);
-    var fixtCol1 = document.createElement("div");
-    fixtCol1.setAttribute("class", "fixture-name");
-    var fixtName = document.createElement("p");
-    fixtName.innerHTML = "(" + this.FixtureId + ") " + this.Description;
-    fixtCol1.appendChild(fixtName);
-    var fixtImg = document.createElement("img");
-    if (this.Image != undefined) {
-      fixtImg.src = this.Image.GetCustomImageURL(800, 600);
-    }
-    fixtCol1.appendChild(fixtImg);
 
-    var fixtCol2 = document.createElement("div");
-    fixtCol2.setAttribute("class", "fixture-item");
-    var fixtNotes = document.createElement("textarea");
-    if (this.Notes != undefined && this.Notes != "") {
-      fixtNotes.value = this.Notes;
-    } else if (this.LongComment != undefined && this.LongComment != "") {
-      fixtNotes.value = "[Zoller Comment] " + this.LongComment;
-      fixtNotes.setAttribute("disabled", "disabled");
-    } else if (this.ClampingDescription != undefined && this.ClampingDescription != "") {
-      fixtNotes.value = "[Zoller Clamping] " + this.ClampingDescription;
-      fixtNotes.setAttribute("disabled", "disabled");
-    }
-    fixtCol2.appendChild(fixtNotes);
-
-    fixt.appendChild(fixtCol1);
-    fixt.appendChild(fixtCol2);
-
-    if (typeof parent !== "undefined" && parent !== undefined) {
-      if (overwrite !== undefined || overwrite == false) {
-        var ex = parent.querySelector("[data-fixture='" + this.FixtureId + "']").parentElement;
-        if (ex !== undefined) {
-          parent.insertBefore(fixt, ex);
-          parent.removeChild(ex);
-        } else {
-          parent.appendChild(fixt);
+  // Iterate through each main node to find pertinent data for the current object. This is done to avoid getting data from SubData nodes
+  for (var len = nodeFixture.children.length, n = 0; n < len; n++) {
+    // Get Components and Accessories of the Fixture
+    if (nodeFixture.children[n].tagName == "Article") {
+      cmpnts = getNodes(nodeFixture.children[n], "Accessory");
+      if (cmpnts != undefined) {
+        for (var clen = cmpnts.length, i = 0; i < clen; i++) {
+          this.Accessories.push(new ZollerAccessory(cmpnts[i]));// Send XML structure. Only captured using LoadSubData query.
         }
-        setHandlers();
       } else {
-        parent.appendChild(fixt);
-        setHandlers();
+        console.log("No accessories found in Article Data");
       }
-    } else {
-      return fixt;
+    }
+    // Get Documents of the Fixture
+    if (nodeFixture.children[n].tagName == "ExternalDocument") {
+      var cmpnts = getNodes(nodeFixture.children[n], "Document");
+      if (cmpnts != undefined) {
+        for (var clen = cmpnts.length, i = 0; i < clen; i++) {
+          this.Documents.push(new ZollerDocument(cmpnts[i]));// Send XML structure. Only captured using LoadSubData query.
+        }
+      } else {
+        console.log("No documents found in ExternalDocument Data");
+      }
+    }
+    if (nodeFixture.children[n].tagName == "FixtureSubList") {
+      var subfixts = getNodes(nodeFixture.children[n], "Fixture");
+      for (var flen = subfixts.length, m = 0; m < flen; m++) {
+        var fid = getValue(subfixts[m], "FixtureId");
+        if (fid != undefined && typeof fid != "undefined") {
+          var nwFixture = new ZollerFixture(fid);
+          nwFixture.IsTrueZoller = true;
+          this.Fixtures.push(nwFixture);
+        }
+      }
     }
   }
 }
@@ -898,6 +1096,99 @@ function ZollerMeasuringDeviceV2(id) {
         }
       }
     }
+  }
+
+  this.GetJSON = function () {
+    var out = "{\"id\":\"" + this.MeasuringDeviceId + "\",";
+    out += "\"Notes\":\"" + this.Notes + "\",";
+    out += "}";
+    return out;
+  }
+
+  this.DrawHTML = function (size, theme, parent, overwrite) {
+    var meas = document.createElement("div");
+    meas.setAttribute("class", "measure measure-" + size + " theme-" + theme);
+    meas.setAttribute("data-measure", this.MeasuringDeviceId);
+    var measCol1 = document.createElement("div");
+    measCol1.setAttribute("class", "measure-name");
+    var measName = document.createElement("p");
+    measName.innerHTML = "<sup>(" + this.MeasuringDeviceId + ")</sup> " + this.Description;
+    measCol1.appendChild(measName);
+    var imgName = document.createElement("img");
+    if (this.Images.length > 0) {
+      imgName.src = this.Images[0].ImageURL;
+    }
+    measName.appendChild(imgName);
+    // Check for drop downs
+    if (this.Accessories.length > 0) {
+      // Draw drop-down button for sub-fixtures
+      var measAccCount = document.createElement("span");
+      measAccCount.setAttribute("class", "accessorycount");
+      var measAccDropCount = document.createElement("a");
+      measAccDropCount.setAttribute("class", "flip-item");
+      measAccCount.appendChild(measAccDropCount);
+      measAccCount.innerHTML += this.Accessories.length;
+      measCol1.appendChild(measAccCount);
+    }
+
+    // Draw Notes
+    var measCol2 = document.createElement("div");
+    measCol2.setAttribute("class", "fixture-item");
+    var measNotes = document.createElement("textarea");
+    measNotes.disabled = true;
+    if (this.Notes != undefined && this.Notes != "") {
+      measNotes.value = this.Notes;
+    } else if (this.LongComment != undefined && this.LongComment != "") {
+      measNotes.value = "[Zoller Comment] " + this.LongComment;
+    }
+    measCol2.appendChild(measNotes);
+
+    // Draw Zoller lock if applicable
+    if (!this.IsTrueZoller) {
+      var delName = document.createElement("a");
+      delName.setAttribute("class", "delete");
+      measCol1.appendChild(delName);
+    } else {
+      var zolIcon = document.createElement("span");
+      zolIcon.setAttribute("title", "This item is managed through Zoller TMS and relevant data cannot be edited.")
+      zolIcon.setAttribute("class", "zollerLock");
+      zolIcon.onclick = function (e) {
+        MessageBox.Show("This is a fixture managed by Zoller TMS. The fixture can only be modified or removed from the Setup Sheet via the Zoller TMS interface.",
+          "Fixture Locked", MessageBox.BoxType.Okay, "info", undefined);
+        e.preventDefault();
+      }
+      measCol1.appendChild(zolIcon);
+    }
+
+    meas.appendChild(measCol1);
+    meas.appendChild(measCol2);
+    
+    if (this.Accessories.length > 0) {
+      // Draw accessories
+      var measCol3 = document.createElement("div");
+      measCol3.setAttribute("class", "accessory-sub");
+      for (var len = this.Accessories.length, n = 0; n < len; n++) {
+        measCol3.appendChild(this.Accessories[n].DrawHTML("sm", theme))
+      }
+      meas.appendChild(measCol3);
+    }
+
+    if (typeof parent !== "undefined" && parent !== undefined) {
+      if (overwrite !== undefined || overwrite == false) {
+        var ex = parent.querySelector("[data-measure='" + this.MeasuringDeviceId + "']").parentElement;
+        if (ex !== undefined) {
+          parent.insertBefore(meas, ex);
+          parent.removeChild(ex);
+        } else {
+          parent.appendChild(meas);
+        }
+        setHandlers();
+      } else {
+        parent.appendChild(meas);
+        setHandlers();
+      }
+    }
+    return meas;
   }
 
   console.log("Object type is: ", (typeof id));
@@ -929,6 +1220,42 @@ function ZollerMeasuringDeviceV2(id) {
   this.MainTestValueLowerTol = getValue(nodeMeasuringDevice, "MainTestValueLowerTol");
   this.MeasuringPrecision = getValue(nodeMeasuringDevice, "MeasuringPrecision");
   this.InvFullCopy = getValue(nodeMeasuringDevice, "InvFullCopy");
+  this.Images = [];
+  this.Accessories = [];
+  this.Documents = [];
+
+  // Iterate through each main node to find pertinent data for the current object. This is done to avoid getting data from SubData nodes
+  for (var len = nodeMeasuringDevice.children.length, n = 0; n < len; n++) {
+    // Iterate through the main nodes first as there are more nodes than suffixes
+    for (var clen = graphicSuffixes.length, i = 0; i < clen; i++) {
+      // Iterate through the possible suffixes to see if the current node matches
+      if (nodeMeasuringDevice.children[n].tagName == "GraphicFile" + graphicSuffixes[i]) {
+        this.Images.push(new ZollerGraphicImage(nodeMeasuringDevice.children[n].innerHTML, nodeMeasuringDevice.children[n + 1].innerHTML));
+      }
+    }
+    // Get Components and Accessories of the Measuring Device
+    if (nodeMeasuringDevice.children[n].tagName == "Article") {
+      cmpnts = getNodes(nodeMeasuringDevice.children[n], "Accessory");
+      if (cmpnts != undefined) {
+        for (var clen = cmpnts.length, i = 0; i < clen; i++) {
+          this.Accessories.push(new ZollerAccessory(cmpnts[i]));// Send XML structure. Only captured using LoadSubData query.
+        }
+      } else {
+        console.log("No accessories found in Article Data");
+      }
+    }
+    // Get Documents of the Measuring Device
+    if (nodeMeasuringDevice.children[n].tagName == "ExternalDocument") {
+      var cmpnts = getNodes(nodeMeasuringDevice.children[n], "Document");
+      if (cmpnts != undefined) {
+        for (var clen = cmpnts.length, i = 0; i < clen; i++) {
+          this.Documents.push(new ZollerDocument(cmpnts[i]));// Send XML structure. Only captured using LoadSubData query.
+        }
+      } else {
+        console.log("No documents found in ExternalDocument Data");
+      }
+    }
+  }
 }
 
 function ZollerStorage(id) {
@@ -1141,7 +1468,12 @@ function ZollerGraphicImage(file, group) {
   img.setAttribute("class", "graphic");
   this.Image = img;
   this.GetCustomImageURL = function (width, height) {
-    return _WebServiceBaseURL + "Graphic/" + this.GraphicGroup + "/" + this.FileName + "?w=" + width + "&h=" + height;
+    if (this.GraphicGroup != undefined && this.FileName != undefined && typeof this.GraphicGroup != "undefined" && typeof this.FileName != "undefined") {
+      return _WebServiceBaseURL + "Graphic/" + this.GraphicGroup + "/" + this.FileName + "?w=" + width + "&h=" + height;
+    } else {
+      return ""
+    }
+    
   }
 }
 
@@ -1297,6 +1629,12 @@ function _WebRequest(method, query, callback, data, async) {
 //
 // **************************************************************************
 
+function RaiseFixtureDeleteEvent(Fixture) {
+  var evt = document.createEvent("Events");
+  evt.initEvent("fixturedelete", true, true);
+  evt.FixtureId = Fixture;
+  document.dispatchEvent(evt);
+}
 function RaiseToolDeleteEvent(Tool) {
   var evt = document.createEvent("Events");
   evt.initEvent("tooldelete", true, true);
@@ -1339,6 +1677,12 @@ function RaiseFixtureSelectedEvent(Fixture) {
   var evt = document.createEvent("Events");
   evt.initEvent("fixtureselected", true, true);
   evt.FixtureId = Fixture;
+  document.dispatchEvent(evt);
+}
+function RaiseAccessorySelectedEvent(Accessory) {
+  var evt = document.createEvent("Events");
+  evt.initEvent("accessoryselected", true, true);
+  evt.AccessoryId = Accessory;
   document.dispatchEvent(evt);
 }
 
@@ -1422,6 +1766,10 @@ function deleteTool(e) {
   RaiseToolDeleteEvent(e.target.parentElement.dataset.tool);
   e.preventDefault();
 }
+function deleteFixture(e) {
+  RaiseFixtureDeleteEvent(e.target.parentElement.dataset.fixture);
+  e.preventDefault();
+}
 function selectedComponent(e) {
   // Double check that another function wasn't intended
   if (e.target.tagName == "A") { return false }
@@ -1474,17 +1822,87 @@ function setHandlers() {
       RaiseComponentAddEvent(e.target.parentElement.dataset.tool)
     };
   });
-  cols = document.querySelectorAll(".fixture");
+  cols = document.querySelectorAll(".fixture-name");
   [].forEach.call(cols, function (col) {
     col.onclick = function (e) {
       // Place event here
       // Double check that another function wasn't intended
       if (e.target.getAttribute("class") === null) {
-        this.classList.toggle("clicked");
-        RaiseFixtureSelectedEvent(this.dataset.fixture);
+        RaiseFixtureSelectedEvent(this.parentElement.dataset.fixture);
       } else if (e.target.getAttribute("class").indexOf("fixture-name") > -1) {
-        this.classList.toggle("clicked");
-        RaiseFixtureSelectedEvent(this.dataset.fixture);
+        RaiseFixtureSelectedEvent(this.parentElement.dataset.fixture);
+      }
+    }
+  });
+  cols = document.querySelectorAll(".assembly-name > .accessorycount > .flip-item");
+  [].forEach.call(cols, function (col) {
+    col.onclick = function () {
+      var parTool = this.parentElement.parentElement.parentElement;
+      var subAccDiv = parTool.querySelector(".accessory-sub");
+      var closing = subAccDiv.classList.contains("show");
+      subAccDiv.classList.toggle("show");
+      if (parTool.style.getPropertyValue("height") != "" && parTool.querySelector(".show") == null) {
+        parTool.style.removeProperty("height");
+      } else {
+        //parFixt.style.height = "auto";
+        if (closing) {
+          parTool.style.height = "calc(" + parTool.clientHeight + "px - var(--sizeHeight))";
+        } else {
+          parTool.style.height = "calc(var(--sizeHeight) + " + parTool.clientHeight + "px)";
+        }
+      }
+      this.classList.toggle("flipped");
+    }
+  });
+  cols = document.querySelectorAll(".fixture-name > .childcount > .flip-item");
+  [].forEach.call(cols, function (col) {
+    col.onclick = function () {
+      var parFixt = this.parentElement.parentElement.parentElement;
+      var subFixtDiv = parFixt.querySelector(".fixture-sub");
+      var closing = subFixtDiv.classList.contains("show");
+      subFixtDiv.classList.toggle("show");
+      if (parFixt.style.getPropertyValue("height") != "" && parFixt.querySelector(".show") == null) {
+        parFixt.style.removeProperty("height");
+      } else {
+        //parFixt.style.height = "auto";
+        if (closing) {
+          parFixt.style.height = "calc(" + parFixt.clientHeight + "px - var(--sizeHeight))";
+        } else {
+          parFixt.style.height = "calc(var(--sizeHeight) + " + parFixt.clientHeight + "px)";
+        }
+      }
+      this.classList.toggle("flipped");
+    }
+  });
+  cols = document.querySelectorAll(".fixture-name > .accessorycount > .flip-item");
+  [].forEach.call(cols, function (col) {
+    col.onclick = function () {
+      var parFixt = this.parentElement.parentElement.parentElement;
+      var subAccDiv = parFixt.querySelector(".accessory-sub");
+      var closing = subAccDiv.classList.contains("show");
+      subAccDiv.classList.toggle("show");
+      if (parFixt.style.getPropertyValue("height") != "" && parFixt.querySelector(".show") == null) {
+        parFixt.style.removeProperty("height");
+      } else {
+        //parFixt.style.height = "auto";
+        if (closing) {
+          parFixt.style.height = "calc(" + parFixt.clientHeight + "px - var(--sizeHeight))";
+        } else {
+          parFixt.style.height = "calc(var(--sizeHeight) + " + parFixt.clientHeight + "px + 15px)";
+        }
+      }
+      this.classList.toggle("flipped");
+    }
+  });
+  cols = document.querySelectorAll(".accessory-name");
+  [].forEach.call(cols, function (col) {
+    col.onclick = function (e) {
+      // Place event here
+      // Double check that another function wasn't intended
+      if (e.target.getAttribute("class") === null) {
+        RaiseAccessorySelectedEvent(this.parentElement.dataset.accessory);
+      } else if (e.target.getAttribute("class").indexOf("accessory-name") > -1) {
+        RaiseAccessorySelectedEvent(this.parentElement.dataset.accessory);
       }
     }
   });
