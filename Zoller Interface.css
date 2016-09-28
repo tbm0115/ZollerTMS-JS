@@ -139,6 +139,8 @@
 	-o-transition: height 0.75s cubic-bezier(.68,-0.55,.27,1.55);
 	-ms-transition: height 0.75s cubic-bezier(.68,-0.55,.27,1.55);
 	transition: height 0.75s cubic-bezier(.68,-0.55,.27,1.55);
+	
+	font-size: calc(var(--sizeHeight) / 8);
 }
 .assembly:first-child{
 	border-top: 1px solid black;
@@ -229,6 +231,10 @@
 	border: 2px ridge #333;
 	border-radius: 3px;
 	top: 1.15em;
+	object-fit: contain;
+}
+.assembly-name img[src=''],.assembly-name img[src='undefined']{
+	display: none;
 }
 .assembly-name .id{
 	position: absolute;
@@ -263,6 +269,8 @@
 	-webkit-transation: top 1s, left 1s;
 	transition-property: top, left;
 	transition-duration: 0.3s;
+	
+	font-size: calc(var(--sizeHeight) / 8);
 }
 .assembly-item:nth-child(2){
 	border-left: 1px inset;
@@ -312,6 +320,10 @@
 	margin-right: auto;
 	width: 50%;
 	height: calc(var(--sizeHeight) / 2);
+	object-fit: contain;
+}
+.assembly-item img[src=''],.assembly-item img[src='undefined']{
+	display: none;
 }
 
 .add-component{
@@ -377,11 +389,29 @@
 	border: 2px outset #333;
 	border-radius: 3px;
 	margin: 3px;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: contain;
 }
 
 /* *************************************************
    *****************Fixture Styling*****************
    ************************************************* */
+.fixture-list{
+	position: relative;
+	display: block;
+	margin-top: 1.15em;
+}
+.fixture-list::before{
+	content: "Fixtures";
+	position: absolute;
+	/*left: -4em;
+	top: calc(var(--sizeWidth) / 5);*/
+	display: inline-block;
+	/*transform: rotate(-90deg);*/
+	left: 0px;
+	top: -1.15em;
+}
 
 .fixture{
 	position: relative;
@@ -407,29 +437,31 @@
 	-o-transition: height 0.75s cubic-bezier(.68,-0.55,.27,1.55);
 	-ms-transition: height 0.75s cubic-bezier(.68,-0.55,.27,1.55);
 	transition: height 0.75s cubic-bezier(.68,-0.55,.27,1.55);
+	
+	font-size: calc(var(--sizeHeight) / 8);
 }
 .fixture-sm{
 	--sizeHeight: 100px;
-  --sizeWidth: 200px;
+  --sizeWidth: 300px;
 	/*--sizeWidth: calc(var(--sizeHeight) * 2);
 	--sizeWidth: -webkit-calc(var(--sizeHeight) * 2);
 	--sizeWidth: -moz-calc(var(--sizeHeight) * 2);*/
 }
 .fixture-md{
 	--sizeHeight: 125px;
-  --sizeWidth: 250px;
+  --sizeWidth: 350px;
 	/*--sizeWidth: calc(var(--sizeHeight) * 2);
 	--sizeWidth: -webkit-calc(var(--sizeHeight) * 2);
 	--sizeWidth: -moz-calc(var(--sizeHeight) * 2);*/
 }
 .fixture-lg{
 	--sizeHeight: 150px;
-  --sizeWidth: 300px;
+  --sizeWidth: 400px;
 	/*--sizeWidth: calc(var(--sizeHeight) * 2);
 	--sizeWidth: -webkit-calc(var(--sizeHeight) * 2);
 	--sizeWidth: -moz-calc(var(--sizeHeight) * 2);*/
 }
-.fixture .fixture{
+.fixture-sub .fixture{
 	background: none;
 	border: none;
 }
@@ -477,6 +509,10 @@
 	margin-right: auto;
 	border: 2px ridge #333;
 	border-radius: 3px;
+	object-fit: contain;
+}
+.fixture-name img[src=''],.fixture-name img[src='undefined']{
+	display: none;
 }
 .fixture-name .childcount{
 	position: absolute;
@@ -536,6 +572,18 @@
 	transform: rotate(-90deg);
 }
 
+.fixture-sub > .fixture{
+	display: inline-block;
+	width: auto;
+}
+.fixture-sub > .fixture > .fixture-name{
+	border: 1px outset black;
+	border-radius: 7px;
+}
+.fixture-sub > .fixture > .fixture-item{
+	display: none;
+}
+
 /* *************************************************
    ****************Accessory Styling****************
    ************************************************* */
@@ -555,6 +603,8 @@
 	font-weight: 600;
 	text-shadow: 0.5px 0.5px 0.5px rgba(0, 0, 0, 0.6);
 	white-space: nowrap;
+	
+	font-size: calc(var(--sizeHeight) / 8);
 }
 .accessory-sm{
 	--sizeHeight: 100px;
@@ -603,11 +653,17 @@
 	position: relative;
 	display: block;
 	width: 95%;
-	height: 100px;
-	height: calc(var(--sizeHeight) / 1.8);
+	height: 75px;
+	height: calc(var(--sizeHeight) * 0.5);
+	height: -webkit-calc(var(--sizeHeight) * 0.5);
+	height: -moz-calc(var(--sizeHeight) * 0.5);
 	margin: auto;
 	border: 2px ridge #333;
 	border-radius: 3px;
+	object-fit: contain;
+}
+.accessory-name img[src=''],.accessory-name img[src='undefined']{
+	display: none;
 }
 
 .accessory-item{
@@ -649,6 +705,21 @@
 /* *************************************************
    *****************Measure Styling*****************
    ************************************************* */
+.measure-list{
+	position: relative;
+	display: block;
+	margin-top: 1.15em;
+}
+.measure-list::before{
+	content: "Measuring Devices";
+	position: absolute;
+	/*left: -4em;
+	top: calc(var(--sizeWidth) / 5);*/
+	display: inline-block;
+	/*transform: rotate(-90deg);*/
+	left: 0px;
+	top: -1.15em;
+}
 
 .measure{
 	position: relative;
@@ -674,18 +745,20 @@
 	-o-transition: height 0.75s cubic-bezier(.68,-0.55,.27,1.55);
 	-ms-transition: height 0.75s cubic-bezier(.68,-0.55,.27,1.55);
 	transition: height 0.75s cubic-bezier(.68,-0.55,.27,1.55);
+	
+	font-size: calc(var(--sizeHeight) / 8);
 }
 .measure-sm{
 	--sizeHeight: 100px;
-  --sizeWidth: 200px;
+  --sizeWidth: 300px;
 }
 .measure-md{
 	--sizeHeight: 125px;
-  --sizeWidth: 250px;
+  --sizeWidth: 350px;
 }
 .measure-lg{
 	--sizeHeight: 150px;
-  --sizeWidth: 300px;
+  --sizeWidth: 400px;
 }
 
 .measure-name{
@@ -735,6 +808,10 @@
 	margin-right: auto;
 	border: 2px ridge #333;
 	border-radius: 3px;
+	object-fit: contain;
+}
+.measure-name img[src=''],.measure-name img[src='undefined']{
+	display: none;
 }
 .measure-name .childcount{
 	position: absolute;
@@ -778,4 +855,16 @@
 	border-radius: 4px;
 	color: #333;
 	text-shadow: 2px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.measure-sub > .measure{
+	display: inline-block;
+	width: auto;
+}
+.measure-sub > .measure > .measure-name{
+	border: 1px outset black;
+	border-radius: 7px;
+}
+.measure-sub > .measure > .measure-item{
+	display: none;
 }

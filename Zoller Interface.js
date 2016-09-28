@@ -42,6 +42,7 @@ var _imageMediumPreviewSize = { width: 75, height: 75 };
 var _imageSmallPreviewSize = { width: 50, height: 50 };
 var _interfaceSizes = ["sm", "md", "lg"];
 var _DefaultInterfaceSize = _interfaceSizes[2];
+var _AllowEdit = false;
 // **************************************************************************
 // ***************************Web Service Objects***************************
 //
@@ -76,7 +77,6 @@ function ZollerAdapter(id) {
     }
   }
 
-  console.log("Object type is: ", (typeof id));
   var nodeAdapter;
   if ((typeof id) == "string") {
     this.XML = _WebRequest("GET", "Adapter/" + id + "?LoadSubData=true", this.SetXML);
@@ -88,6 +88,8 @@ function ZollerAdapter(id) {
   }
   nodeAdapter = getNodeByTagName(this.XML, "Adapter");
 
+	this.IsTrueZoller = true;
+	
   this.AdapterId = getValue(nodeAdapter, "AdapterId");
   this.Name = getValue(nodeAdapter, "Name");// Grabbing the global value is okay because it only returns the first instance of the object
   this.AdapterType = getValue(nodeAdapter, "AdapterType");
@@ -165,7 +167,6 @@ function ZollerMachine(id) {
     }
   }
 
-  console.log("Object type is: ", (typeof id));
   var nodeMachine;
   if ((typeof id) == "string") {
     this.XML = _WebRequest("GET", "Machine/" + id + "?LoadSubData=true", this.SetXML);
@@ -177,6 +178,7 @@ function ZollerMachine(id) {
   }
   nodeMachine = getNodeByTagName(this.XML, "Machine");
 
+	this.IsTrueZoller = true;
 
   this.MachineId = getValue(nodeMachine, "MachineId");// Grabbing the global value is okay because it only returns the first instance of the object
   this.Name = getValue(nodeMachine, "Name");
@@ -294,7 +296,6 @@ function ZollerSettingSheet(id) {
     }
   }
 
-  console.log("Object type is: ", (typeof id));
   var nodeSettingSheet;
   if ((typeof id) == "string") {
     this.XML = _WebRequest("GET", "SettingSheet/" + id + "?LoadSubData=true", this.SetXML);
@@ -306,6 +307,8 @@ function ZollerSettingSheet(id) {
   }
   nodeSettingSheet = getNodeByTagName(this.XML, "SettingSheet");
 
+	this.IsTrueZoller = true;
+	
   this.SettingSheetId = getValue(nodeSettingSheet, "SettingSheetId");
   this.Name = getValue(nodeSettingSheet, "Name");// Grabbing the global value is okay because it only returns the first instance of the object
   this.WorkStep = getValue(nodeSettingSheet, "WorkStep");
@@ -420,9 +423,11 @@ function ZollerTool(id) {
     divName.appendChild(imgName);
 
     if (!this.IsTrueZoller) {
-      var delName = document.createElement("a");
-      delName.setAttribute("class", "delete");
-      divName.appendChild(delName);
+      if (_AllowEdit) { // Determines if the page allows the 'delete' functions to be added.
+        var delName = document.createElement("a");
+        delName.setAttribute("class", "delete");
+        divName.appendChild(delName);
+      }
     } else {
       var zolIcon = document.createElement("span");
       zolIcon.setAttribute("class", "zollerLock");
@@ -435,11 +440,13 @@ function ZollerTool(id) {
       divName.appendChild(zolIcon);
     }
 
-    if (!this.IsTrueZoller) {
-      var btnName = document.createElement("a");
-      //btnName.setAttribute("type", "button");
-      btnName.setAttribute("class", "add-component");
-      divName.appendChild(btnName);
+    if (_AllowEdit) { // Determines if the page allows the 'add component' functions to be added.
+      if (!this.IsTrueZoller) {
+        var btnName = document.createElement("a");
+        //btnName.setAttribute("type", "button");
+        btnName.setAttribute("class", "add-component");
+        divName.appendChild(btnName);
+      }
     }
 
     if (this.Accessories.length > 0) {
@@ -460,7 +467,7 @@ function ZollerTool(id) {
       divItem.setAttribute("class", "assembly-item");
       divItem.setAttribute("data-tool", this.ToolId);
       divItem.setAttribute("data-component", this.SingleComponents[n].ComponentId);
-      divItem.setAttribute("draggable", "true");
+      divItem.setAttribute("draggable", _AllowEdit); // Only draggable if the page allows editing.
       var aItem = document.createElement("a");
       var pId = document.createElement("p");
       pId.innerHTML = this.SingleComponents[n].ComponentId;
@@ -482,10 +489,12 @@ function ZollerTool(id) {
       divItemImg.appendChild(imgItem);
       aItem.appendChild(divItemImg);
       divItem.appendChild(aItem);
-      if (!this.IsTrueZoller) {
-        var delItem = document.createElement("a");
-        delItem.setAttribute("class", "delete");
-        divItem.appendChild(delItem);
+      if (_AllowEdit) { // Determines if the page allows the 'delete' functions to be added to the component.
+        if (!this.IsTrueZoller) {
+          var delItem = document.createElement("a");
+          delItem.setAttribute("class", "delete");
+          divItem.appendChild(delItem);
+        }
       }
 
       ass.appendChild(divItem);
@@ -524,14 +533,14 @@ function ZollerTool(id) {
 
   // This function can be altered to generate a custom XML structure to store Tool assemblies in non-Zoller storage. It is important that this is defined before SetXML() to avoid an undefined function.
   this.GetXML = function () {
-    var out = "<Assembly id=\"" + this.ToolId + "\" name=\"" + this.Description + "\" iszoller=\"" + this.IsTrueZoller + "\">";
+    var out = "<Assembly id=\"" + this.ToolId + "\" name=\"" + this.Description.replace(/'/g, "&apos;").replace(/"/g, "&quot;") + "\" iszoller=\"" + this.IsTrueZoller + "\">";
     if (this.SingleComponents != undefined) {
       for (var len = this.SingleComponents.length, n = 0; n < len; n++) {
         out += "<Tool id=\"" + this.SingleComponents[n].ComponentId + "\">";
         for (a = 0; a < this.SingleComponents[n].CharacteristicStructures.length; a++) {
           if (this.SingleComponents[n].CharacteristicStructures[a].System == "SSS") {
             for (b = 0; b < this.SingleComponents[n].CharacteristicStructures[a].Characteristics.length; b++) {
-              out += "<Characteristic label=\"" + this.SingleComponents[n].CharacteristicStructures[a].Characteristics[b].Label + "\">";
+              out += "<Characteristic label=\"" + this.SingleComponents[n].CharacteristicStructures[a].Characteristics[b].Label.replace(/'/g, "&apos;").replace(/"/g, "&quot;") + "\">";
               out += this.SingleComponents[n].CharacteristicStructures[a].Characteristics[b].Value + "</Characteristics>";
             }
           }
@@ -545,7 +554,6 @@ function ZollerTool(id) {
   }
 
   // Determine if the object is a valid Zoller object by attempting to get data from the Zoller WebService.
-  console.log("Object type is: ", (typeof id));
   var nodeTool;
   if ((typeof id) == "string") {
     this.XML = _WebRequest("GET", "Tool/" + id + "?LoadSubData=true", this.SetXML);
@@ -662,7 +670,6 @@ function ZollerSingleComponent(id) {
   }
 
   // Determine if the object is a valid Zoller object by attempting to get data from the Zoller WebService.
-  console.log("Object type is: ", (typeof id));
   var nodeComponent;
   if ((typeof id) == "string") {
     this.XML = _WebRequest("GET", "Component/" + id + "?LoadSubData=true", this.SetXML);
@@ -767,6 +774,13 @@ function ZollerAccessory(id) {
     }
   }
 
+  this.GetJSON = function () {
+    var out = "{\"id\":\"" + this.AccessoryId + "\",";
+    out += "\"Notes\":\"" + ((this.Notes != undefined) ? this.Notes.replace(/'/g, "&apos;").replace(/"/g, "&quot;") + "\"," : "\",");
+    out += "}";
+    return out;
+  }
+	
   this.DrawHTML = function (size, theme, parent, overwrite) {
     var divMain = document.createElement("div");
     divMain.setAttribute("class", "accessory accessory-" + size + " theme-" + theme);
@@ -775,7 +789,7 @@ function ZollerAccessory(id) {
     var divName = document.createElement("div");
     divName.setAttribute("class", "accessory-name");
 
-    var pId = document.createElement("p");
+    var pId = document.createElement("sup");
     pId.innerHTML = this.AccessoryId;
     divName.appendChild(pId);
 
@@ -789,6 +803,13 @@ function ZollerAccessory(id) {
     }
     divName.appendChild(imgName);
 
+    // Draw Zoller lock if applicable
+		if (_AllowEdit && this.CanDelete) { // Determines if the page allows the 'delete' functions to be added.
+			var delName = document.createElement("a");
+			delName.setAttribute("class", "delete");
+			divName.appendChild(delName);
+		}
+		
     var divDetails = document.createElement("div");
     divDetails.setAttribute("class", "accessory-item");
 
@@ -800,7 +821,7 @@ function ZollerAccessory(id) {
     txt.value = this.Standard;
     divDetails.appendChild(lbl);
     divDetails.appendChild(txt);
-    
+
     var lbl = document.createElement("label");
     lbl.innerHTML = "Lifetime";
     var txt = document.createElement("input");
@@ -809,7 +830,7 @@ function ZollerAccessory(id) {
     txt.value = this.Lifetime;
     divDetails.appendChild(lbl);
     divDetails.appendChild(txt);
-    
+
     var lbl = document.createElement("label");
     lbl.innerHTML = "Notes";
     var txt = document.createElement("textarea");
@@ -839,7 +860,6 @@ function ZollerAccessory(id) {
     return divMain;
   }
 
-  console.log("Object type is: ", (typeof id));
   var nodeAccessory;
   if ((typeof id) == "string") {
     this.XML = _WebRequest("GET", "Accessory/" + id + "?LoadSubData=true", this.SetXML);
@@ -853,11 +873,31 @@ function ZollerAccessory(id) {
 
   this.AccessoryId = getValue(nodeAccessory, "AccessoryId");
 
+	this.IsTrueZoller = true;
+	this.CanDelete = false;
+	
   this.Description = getValue(nodeAccessory, "Description");
   this.LongComment = convertToPlain(getValue(nodeAccessory, "LongComment"));
   this.Standard = getValue(nodeAccessory, "Norm");
   this.Lifetime = getValue(nodeAccessory, "Lifetime");
   this.Image = new ZollerGraphicImage(getValue(nodeAccessory, "GraphicFile"), getValue(nodeAccessory, "GraphicGroup"));
+  this.Documents = [];
+
+
+  // Iterate through each main node to find pertinent data for the current object. This is done to avoid getting data from SubData nodes
+  for (var len = nodeAccessory.children.length, n = 0; n < len; n++) {
+    // Get Documents of the Tool
+    if (nodeAccessory.children[n].tagName == "ExternalDocument") {
+      var cmpnts = getNodes(nodeAccessory.children[n], "Document");
+      if (cmpnts != undefined) {
+        for (var clen = cmpnts.length, i = 0; i < clen; i++) {
+          this.Documents.push(new ZollerDocument(cmpnts[i]));// Send XML structure. Only captured using LoadSubData query.
+        }
+      } else {
+        console.log("No documents found in ExternalDocument Data");
+      }
+    }
+  }
 }
 
 function ZollerFixture(id) {
@@ -883,11 +923,11 @@ function ZollerFixture(id) {
 
   this.GetJSON = function () {
     var out = "{\"id\":\"" + this.FixtureId + "\",";
-    out += "\"Notes\":\"" + this.Notes + "\",";
-    out += "\"PalletJawNo\":\"" + this.PalletJawNo + "\",";
-    out += "\"ClampingPressure\":\"" + this.ClampingPressure + "\",";
-    out += "\"ClampingDiagram\":\"" + this.ClampingDiagram + "\",";
-    out += "\"Remark\":\"" + this.Remark + "\"";
+    out += "\"Notes\":\"" + ((this.Notes != undefined) ? this.Notes.replace(/'/g, "&apos;").replace(/"/g, "&quot;") + "\"," : "\",");
+    out += "\"PalletJawNo\":\"" + ((this.PalletJawNo != undefined) ? this.PalletJawNo.replace(/'/g, "&apos;").replace(/"/g, "&quot;") + "\"," : "\",");
+    out += "\"ClampingPressure\":\"" + ((this.ClampingPressure != undefined) ? this.ClampingPressure.replace(/'/g, "&apos;").replace(/"/g, "&quot;") + "\"," : "\",");
+    out += "\"ClampingDiagram\":\"" + ((this.ClampingDiagram != undefined) ? this.ClampingDiagram.replace(/'/g, "&apos;").replace(/"/g, "&quot;") + "\"," : "\",");
+    out += "\"Remark\":\"" + ((this.Remakr != undefined) ? this.Remark.replace(/'/g, "&apos;").replace(/"/g, "&quot;") + "\"" : "\"");
     out += "}";
     return out;
   }
@@ -943,21 +983,12 @@ function ZollerFixture(id) {
     fixtCol2.appendChild(fixtNotes);
 
     // Draw Zoller lock if applicable
-    if (!this.IsTrueZoller) {
-      var delName = document.createElement("a");
-      delName.setAttribute("class", "delete");
-      fixtCol1.appendChild(delName);
-    } else {
-      var zolIcon = document.createElement("span");
-      zolIcon.setAttribute("title", "This item is managed through Zoller TMS and relevant data cannot be edited.")
-      zolIcon.setAttribute("class", "zollerLock");
-      zolIcon.onclick = function (e) {
-        MessageBox.Show("This is a fixture managed by Zoller TMS. The fixture can only be modified or removed from the Setup Sheet via the Zoller TMS interface.",
-          "Fixture Locked", MessageBox.BoxType.Okay, "info", undefined);
-        e.preventDefault();
-      }
-      fixtCol1.appendChild(zolIcon);
-    }
+		if (_AllowEdit && this.CanDelete) { // Determines if the page allows the 'delete' functions to be added.
+			var delName = document.createElement("a");
+			delName.setAttribute("class", "delete");
+			fixtCol1.appendChild(delName);
+		}
+    
 
     fixt.appendChild(fixtCol1);
     fixt.appendChild(fixtCol2);
@@ -1002,7 +1033,6 @@ function ZollerFixture(id) {
     return fixt;
   }
 
-  console.log("Object type is: ", (typeof id));
   var nodeFixture;
   if ((typeof id) == "string") {
     this.XML = _WebRequest("GET", "Fixture/" + id + "?LoadSubData=true", this.SetXML);
@@ -1016,6 +1046,9 @@ function ZollerFixture(id) {
 
   this.FixtureId = getValue(nodeFixture, "FixtureId");
 
+	this.IsTrueZoller = true;
+	this.CanDelete = false;
+	
   this.Description = getValue(nodeFixture, "Description");
   this.ClampingDescription = getValue(nodeFixture, "ClampingDescription");
   this.DrawingNo = getValue(nodeFixture, "DrawingNo");
@@ -1032,7 +1065,7 @@ function ZollerFixture(id) {
   this.Fixtures = [];
   this.Accessories = [];
   this.Documents = [];
-  
+
   this.Notes = ""; // Custom property
   this.PalletJawNo = ""; // Custom property
   this.ClampingPressure = ""; // Custom property
@@ -1069,8 +1102,7 @@ function ZollerFixture(id) {
         var fid = getValue(subfixts[m], "FixtureId");
         if (fid != undefined && typeof fid != "undefined") {
           var nwFixture = new ZollerFixture(fid);
-          nwFixture.IsTrueZoller = true;
-          this.Fixtures.push(nwFixture);
+					this.Fixtures.push(nwFixture);
         }
       }
     }
@@ -1100,7 +1132,7 @@ function ZollerMeasuringDeviceV2(id) {
 
   this.GetJSON = function () {
     var out = "{\"id\":\"" + this.MeasuringDeviceId + "\",";
-    out += "\"Notes\":\"" + this.Notes + "\",";
+    out += "\"Notes\":\"" + ((this.Notes != undefined) ? this.Notes.replace(/'/g, "&apos;").replace(/"/g, "&quot;") + "\"" : "\"");
     out += "}";
     return out;
   }
@@ -1111,6 +1143,7 @@ function ZollerMeasuringDeviceV2(id) {
     meas.setAttribute("data-measure", this.MeasuringDeviceId);
     var measCol1 = document.createElement("div");
     measCol1.setAttribute("class", "measure-name");
+
     var measName = document.createElement("p");
     measName.innerHTML = "<sup>(" + this.MeasuringDeviceId + ")</sup> " + this.Description;
     measCol1.appendChild(measName);
@@ -1143,26 +1176,16 @@ function ZollerMeasuringDeviceV2(id) {
     }
     measCol2.appendChild(measNotes);
 
-    // Draw Zoller lock if applicable
-    if (!this.IsTrueZoller) {
-      var delName = document.createElement("a");
-      delName.setAttribute("class", "delete");
-      measCol1.appendChild(delName);
-    } else {
-      var zolIcon = document.createElement("span");
-      zolIcon.setAttribute("title", "This item is managed through Zoller TMS and relevant data cannot be edited.")
-      zolIcon.setAttribute("class", "zollerLock");
-      zolIcon.onclick = function (e) {
-        MessageBox.Show("This is a fixture managed by Zoller TMS. The fixture can only be modified or removed from the Setup Sheet via the Zoller TMS interface.",
-          "Fixture Locked", MessageBox.BoxType.Okay, "info", undefined);
-        e.preventDefault();
-      }
-      measCol1.appendChild(zolIcon);
-    }
+		if (_AllowEdit && this.CanDelete) { // Determines if the page allows the 'delete' functions to be added.
+			var delName = document.createElement("a");
+			delName.setAttribute("class", "delete");
+			measCol1.appendChild(delName);
+		}
+    
 
     meas.appendChild(measCol1);
     meas.appendChild(measCol2);
-    
+
     if (this.Accessories.length > 0) {
       // Draw accessories
       var measCol3 = document.createElement("div");
@@ -1191,7 +1214,6 @@ function ZollerMeasuringDeviceV2(id) {
     return meas;
   }
 
-  console.log("Object type is: ", (typeof id));
   var nodeMeasuringDevice;
   if ((typeof id) == "string") {
     this.XML = _WebRequest("GET", "MeasuringDeviceV2/" + id + "?LoadSubData=true", this.SetXML);
@@ -1205,6 +1227,9 @@ function ZollerMeasuringDeviceV2(id) {
 
   this.MeasuringDeviceId = getValue(nodeMeasuringDevice, "MeasuringDeviceId");
 
+	this.IsTrueZoller = true;
+	this.CanDelete = false;
+	
   this.Description = getValue(nodeMeasuringDevice, "Description");
   this.IsCalibrator = getValue(nodeMeasuringDevice, "IsCalibrator");
   this.InternalTest = getValue(nodeMeasuringDevice, "InternalTest");
@@ -1278,7 +1303,6 @@ function ZollerStorage(id) {
     }
   }
 
-  console.log("Object type is: ", (typeof id));
   var nodeStorage;
   if ((typeof id) == "string") {
     this.XML = _WebRequest("GET", "Storage/" + id + "?LoadSubData=true", this.SetXML);
@@ -1292,6 +1316,8 @@ function ZollerStorage(id) {
 
   this.StorageId = getValue(nodeStorage, "StorageId");
 
+	this.IsTrueZoller = true;
+	
   this.Width = getValue(nodeStorage, "Width");
   this.Height = getValue(nodeStorage, "Height");
   this.Depth = getValue(nodeStorage, "Depth");
@@ -1473,7 +1499,7 @@ function ZollerGraphicImage(file, group) {
     } else {
       return ""
     }
-    
+
   }
 }
 
@@ -1574,8 +1600,8 @@ function convertToRtf(plain) {
 //     Defines the URI for the proxy service that can send an authenticated 
 //     request to the Zoller Web Service.
 //     _WebServiceBaseURL:
-//     Defines the URI for the Zoller Web Service. (Typically 
-//     http://{servername}:80/ZollerDbService/) 
+//     Defines the URI for the Zoller Web Service. Typically 
+//     http://[servername]:80/ZollerDbService/
 //
 // **************************************************************************
 
@@ -1601,9 +1627,7 @@ function _WebRequest(method, query, callback, data, async) {
     }
   }
   xhr.onreadystatechange = function () {
-    console.log("_WebRequest: " + xhr.readyState + "   " + xhr.status);
     if (xhr.readyState == 4) {// && xhr.status == 200){
-      //console.log(xhr.responseText);
       if (xhr.status == 200) {
         if (callback != undefined && callback != null) {
           callback(xhr.responseXML);
@@ -1629,6 +1653,18 @@ function _WebRequest(method, query, callback, data, async) {
 //
 // **************************************************************************
 
+function RaiseAccessoryDeleteEvent(Accessory) {
+  var evt = document.createEvent("Events");
+  evt.initEvent("accessorydelete", true, true);
+  evt.AccessoryId = Accessory;
+  document.dispatchEvent(evt);
+}
+function RaiseMeasureDeleteEvent(Measuring) {
+  var evt = document.createEvent("Events");
+  evt.initEvent("measuredelete", true, true);
+  evt.MeasuringDeviceId = Measuring;
+  document.dispatchEvent(evt);
+}
 function RaiseFixtureDeleteEvent(Fixture) {
   var evt = document.createEvent("Events");
   evt.initEvent("fixturedelete", true, true);
@@ -1683,6 +1719,12 @@ function RaiseAccessorySelectedEvent(Accessory) {
   var evt = document.createEvent("Events");
   evt.initEvent("accessoryselected", true, true);
   evt.AccessoryId = Accessory;
+  document.dispatchEvent(evt);
+}
+function RaiseMeasuringSelectedEvent(Measure) {
+  var evt = document.createEvent("Events");
+  evt.initEvent("measureselected", true, true);
+  evt.MeasuringDeviceId = Measure;
   document.dispatchEvent(evt);
 }
 
@@ -1760,15 +1802,28 @@ function toggleEdit(state) {
 }
 function deleteComponent(e) {
   RaiseComponentDeleteEvent(e.target.parentElement.dataset.component, e.target.parentElement.dataset.tool);
+	e.stopImmediatePropagation();
   e.preventDefault();
 }
 function deleteTool(e) {
   RaiseToolDeleteEvent(e.target.parentElement.dataset.tool);
+	e.stopImmediatePropagation();
   e.preventDefault();
 }
 function deleteFixture(e) {
-  RaiseFixtureDeleteEvent(e.target.parentElement.dataset.fixture);
+  RaiseFixtureDeleteEvent(e.target.parentElement.parentElement.dataset.fixture);
+	e.stopImmediatePropagation();
   e.preventDefault();
+}
+function deleteMeasuring(e) {
+	RaiseMeasureDeleteEvent(e.target.parentElement.parentElement.dataset.measure);
+	e.stopImmediatePropagation();
+	e.preventDefault();
+}
+function deleteAccessory(e) {
+	RaiseAccessoryDeleteEvent(e.target.parentElement.parentElement.dataset.accessory);
+	e.stopImmediatePropagation();
+	e.preventDefault();
 }
 function selectedComponent(e) {
   // Double check that another function wasn't intended
@@ -1780,130 +1835,183 @@ function selectedComponent(e) {
   RaiseComponentSelectedEvent(d.dataset.component, d.dataset.tool)
 }
 
+function GetParentWithClass(name,el,limit){
+	var cur = el;
+	for (var len = limit, n = 0; n < len; n++){
+		if (cur.getAttribute("class") != null){
+			if (cur.getAttribute("class").indexOf(name) > -1){
+				return cur
+			}
+		}
+		cur = cur.parentElement;
+	}
+}
 function setHandlers() {
-  var cols = document.querySelectorAll(".assembly-item");
-  [].forEach.call(cols, function (col) {
-    // Drag and Drop functions
-    col.ondragstart = handleDragStart;
-    col.ondragenter = handleDragEnter;
-    col.ondragover = handleDragOver;
-    col.ondragleave = handleDragLeave;
-    col.ondrop = handleDrop;
-    col.ondragend = handleDragEnd;
-
-    // Click function
-    col.onclick = selectedComponent;
-  });
-  cols = document.querySelectorAll(".assembly-item > .delete");
-  [].forEach.call(cols, function (col) {
-    col.onclick = deleteComponent;
-  });
-  cols = document.querySelectorAll(".assembly-name > .delete");
-  [].forEach.call(cols, function (col) {
-    col.onclick = deleteTool;
-  });
-  cols = document.querySelectorAll(".assembly-name");
-  [].forEach.call(cols, function (col) {
-    col.onclick = function (e) {
-      // Place event here
-      // Double check that another function wasn't intended
-      if (e.target.getAttribute("class") === null) {
-        this.classList.toggle("clicked");
-        RaiseToolSelectedEvent(this.dataset.tool);
-      } else if (e.target.getAttribute("class").indexOf("assembly-name") > -1) {
-        this.classList.toggle("clicked");
-        RaiseToolSelectedEvent(this.dataset.tool);
-      }
-    }
-  });
-  cols = document.querySelectorAll(".add-component");
-  [].forEach.call(cols, function (col) {
-    col.onclick = function (e) {
-      RaiseComponentAddEvent(e.target.parentElement.dataset.tool)
-    };
-  });
-  cols = document.querySelectorAll(".fixture-name");
-  [].forEach.call(cols, function (col) {
-    col.onclick = function (e) {
-      // Place event here
-      // Double check that another function wasn't intended
-      if (e.target.getAttribute("class") === null) {
-        RaiseFixtureSelectedEvent(this.parentElement.dataset.fixture);
-      } else if (e.target.getAttribute("class").indexOf("fixture-name") > -1) {
-        RaiseFixtureSelectedEvent(this.parentElement.dataset.fixture);
-      }
-    }
-  });
-  cols = document.querySelectorAll(".assembly-name > .accessorycount > .flip-item");
-  [].forEach.call(cols, function (col) {
-    col.onclick = function () {
-      var parTool = this.parentElement.parentElement.parentElement;
-      var subAccDiv = parTool.querySelector(".accessory-sub");
-      var closing = subAccDiv.classList.contains("show");
-      subAccDiv.classList.toggle("show");
-      if (parTool.style.getPropertyValue("height") != "" && parTool.querySelector(".show") == null) {
-        parTool.style.removeProperty("height");
-      } else {
-        //parFixt.style.height = "auto";
-        if (closing) {
-          parTool.style.height = "calc(" + parTool.clientHeight + "px - var(--sizeHeight))";
-        } else {
-          parTool.style.height = "calc(var(--sizeHeight) + " + parTool.clientHeight + "px)";
-        }
-      }
-      this.classList.toggle("flipped");
-    }
-  });
-  cols = document.querySelectorAll(".fixture-name > .childcount > .flip-item");
-  [].forEach.call(cols, function (col) {
-    col.onclick = function () {
-      var parFixt = this.parentElement.parentElement.parentElement;
-      var subFixtDiv = parFixt.querySelector(".fixture-sub");
-      var closing = subFixtDiv.classList.contains("show");
-      subFixtDiv.classList.toggle("show");
-      if (parFixt.style.getPropertyValue("height") != "" && parFixt.querySelector(".show") == null) {
-        parFixt.style.removeProperty("height");
-      } else {
-        //parFixt.style.height = "auto";
-        if (closing) {
-          parFixt.style.height = "calc(" + parFixt.clientHeight + "px - var(--sizeHeight))";
-        } else {
-          parFixt.style.height = "calc(var(--sizeHeight) + " + parFixt.clientHeight + "px)";
-        }
-      }
-      this.classList.toggle("flipped");
-    }
-  });
-  cols = document.querySelectorAll(".fixture-name > .accessorycount > .flip-item");
-  [].forEach.call(cols, function (col) {
-    col.onclick = function () {
-      var parFixt = this.parentElement.parentElement.parentElement;
-      var subAccDiv = parFixt.querySelector(".accessory-sub");
-      var closing = subAccDiv.classList.contains("show");
-      subAccDiv.classList.toggle("show");
-      if (parFixt.style.getPropertyValue("height") != "" && parFixt.querySelector(".show") == null) {
-        parFixt.style.removeProperty("height");
-      } else {
-        //parFixt.style.height = "auto";
-        if (closing) {
-          parFixt.style.height = "calc(" + parFixt.clientHeight + "px - var(--sizeHeight))";
-        } else {
-          parFixt.style.height = "calc(var(--sizeHeight) + " + parFixt.clientHeight + "px + 15px)";
-        }
-      }
-      this.classList.toggle("flipped");
-    }
-  });
-  cols = document.querySelectorAll(".accessory-name");
-  [].forEach.call(cols, function (col) {
-    col.onclick = function (e) {
-      // Place event here
-      // Double check that another function wasn't intended
-      if (e.target.getAttribute("class") === null) {
-        RaiseAccessorySelectedEvent(this.parentElement.dataset.accessory);
-      } else if (e.target.getAttribute("class").indexOf("accessory-name") > -1) {
-        RaiseAccessorySelectedEvent(this.parentElement.dataset.accessory);
-      }
-    }
-  });
+	// Main Node click
+	setHandler(".assembly-name", "click", function (e) {
+		if (e.target.getAttribute("class") === null || e.target.getAttribute("class").indexOf("assembly-name") > -1) {
+			e.target.classList.toggle("clicked");
+			RaiseToolSelectedEvent(e.target.dataset.tool);
+			e.stopImmediatePropagation();
+			e.preventDefault();
+		}
+	});
+	setHandler(".fixture-name", "click", function (e) {
+		var el = GetParentWithClass("fixture-name",e.target,3);
+		if (el.getAttribute("class") === null || el.getAttribute("class").indexOf("fixture-name") > -1) {
+			RaiseFixtureSelectedEvent(el.parentElement.dataset.fixture);
+			e.stopImmediatePropagation();
+			e.preventDefault();
+		}
+	});
+	setHandler(".measure-name", "click", function (e) {
+		var el = GetParentWithClass("measure-name",e.target,3);
+		if (el.getAttribute("class") === null || el.getAttribute("class").indexOf("measure-name") > -1) {
+			RaiseMeasuringSelectedEvent(el.parentElement.dataset.measure);
+			e.stopImmediatePropagation();
+			e.preventDefault();
+		}
+	});
+	setHandler(".accessory-name", "click", function (e) {
+		var el = GetParentWithClass("accessory-name",e.target,3);
+		if (el.getAttribute("class") === null || el.getAttribute("class").indexOf("accessory-name") > -1) {
+			RaiseAccessorySelectedEvent(el.parentElement.dataset.accessory);
+			e.stopImmediatePropagation();
+			e.preventDefault();
+		}
+	});
+	
+	// Drag events
+	setHandler(".assembly-item", "dragstart", handleDragStart);
+	setHandler(".assembly-item", "dragenter", handleDragEnter);
+	setHandler(".assembly-item", "dragover", handleDragOver);
+	setHandler(".assembly-item", "dragleave", handleDragLeave);
+	setHandler(".assembly-item", "drop", handleDrop);
+	setHandler(".assembly-item", "dragend", handleDragEnd);
+	setHandler(".assembly-item", "click", selectedComponent);
+  setHandler(".assembly-item > .delete", "click", deleteComponent);
+  setHandler(".assembly-name > .delete", "click", deleteTool);
+  
+	// Delete events
+	setHandler(".fixture-name > .delete", "click", deleteFixture);
+  setHandler(".measure-name > .delete", "click", deleteMeasuring);
+	setHandler(".accessory-name > .delete", "click", deleteAccessory);
+	
+	// Add component
+  setHandler(".add-component","click",function (e) {
+		RaiseComponentAddEvent(e.target.parentElement.dataset.tool)
+		e.stopImmediatePropagation();
+		e.preventDefault();
+	});
+  
+	// Flip button events
+  setHandler(".assembly-name > .accessorycount > .flip-item", "click", function (e) {
+		var blnGood = false;
+		if (e.target.getAttribute("class") === null || e.target.getAttribute("class").indexOf("flip-item") > -1){
+			blnGood = true;
+		}
+		if (blnGood){
+			var parTool = e.target.parentElement.parentElement.parentElement;
+			var subAccDiv = parTool.querySelector(".accessory-sub");
+			var closing = subAccDiv.classList.contains("show");
+			subAccDiv.classList.toggle("show");
+			var count = subAccDiv.querySelectorAll(".fixture").length;
+			if (parTool.style.getPropertyValue("height") != "" && parTool.querySelector(".show") == null) {
+				parTool.style.removeProperty("height");
+			} else {
+				//parFixt.style.height = "auto";
+				if (closing) {
+					parTool.style.height = "calc(" + (parTool.clientHeight * count) + "px - var(--sizeHeight))";
+				} else {
+					parTool.style.height = "calc(var(--sizeHeight) + " + (parTool.clientHeight * count) + "px)";
+				}
+			}
+			e.target.classList.toggle("flipped");
+			e.stopImmediatePropagation();
+			e.preventDefault();
+		}
+	});
+  setHandler(".fixture-name > .childcount > .flip-item", "click", function (e) {
+		var blnGood = false;
+		if (e.target.getAttribute("class") === null || e.target.getAttribute("class").indexOf("flip-item") > -1){
+			blnGood = true;
+		}
+		if (blnGood){
+			var parFixt = e.target.parentElement.parentElement.parentElement;
+			var subFixtDiv = parFixt.querySelector(".fixture-sub");
+			var closing = subFixtDiv.classList.contains("show");
+			subFixtDiv.classList.toggle("show");
+			var count = subFixtDiv.querySelectorAll(".fixture").length;
+			if (parFixt.style.getPropertyValue("height") != "" && parFixt.querySelector(".show") == null) {
+				parFixt.style.removeProperty("height");
+			} else {
+				//parFixt.style.height = "auto";
+				if (closing) {
+					parFixt.style.height = "calc(" + (parFixt.clientHeight * count) + "px - var(--sizeHeight))";
+				} else {
+					parFixt.style.height = "calc(var(--sizeHeight) + " + (parFixt.clientHeight * count) + "px)";
+				}
+			}
+			e.target.classList.toggle("flipped");
+			e.stopImmediatePropagation();
+			e.preventDefault();
+		}
+	});
+  setHandler(".fixture-name > .accessorycount > .flip-item", "click", function (e) {
+		var blnGood = false;
+		if (e.target.getAttribute("class") === null || e.target.getAttribute("class").indexOf("flip-item") > -1){
+			blnGood = true;
+		}
+		if (blnGood){
+			var parFixt = e.target.parentElement.parentElement.parentElement;
+			var subAccDiv = parFixt.querySelector(".accessory-sub");
+			var closing = subAccDiv.classList.contains("show");
+			subAccDiv.classList.toggle("show");
+			var count = subAccDiv.querySelectorAll(".accessory").length;
+			if (parFixt.style.getPropertyValue("height") != "" && parFixt.querySelector(".show") == null) {
+				parFixt.style.removeProperty("height");
+			} else {
+				//parFixt.style.height = "auto";
+				if (closing) {
+					parFixt.style.height = "calc(" + (parFixt.clientHeight * count) + "px - var(--sizeHeight))";
+				} else {
+					parFixt.style.height = "calc(var(--sizeHeight) + " + (parFixt.clientHeight * count) + "px + 15px)";
+				}
+			}
+			e.target.classList.toggle("flipped");
+			e.stopImmediatePropagation();
+			e.preventDefault();
+		}
+	});
+  setHandler(".measure-name > .accessorycount > .flip-item", "click", function (e) {
+		var blnGood = false;
+		if (e.target.getAttribute("class") === null || e.target.getAttribute("class").indexOf("flip-item") > -1){
+			blnGood = true;
+		}
+		if (blnGood){
+			var parMeas = e.target.parentElement.parentElement.parentElement;
+			var subAccDiv = parMeas.querySelector(".accessory-sub");
+			var closing = subAccDiv.classList.contains("show");
+			subAccDiv.classList.toggle("show");
+			if (parMeas.style.getPropertyValue("height") != "" && parMeas.querySelector(".show") == null) {
+				parMeas.style.removeProperty("height");
+			} else {
+				//parFixt.style.height = "auto";
+				if (closing) {
+					parMeas.style.height = "calc(" + parMeas.clientHeight + "px - var(--sizeHeight))";
+				} else {
+					parMeas.style.height = "calc(var(--sizeHeight) + " + parMeas.clientHeight + "px + 15px)";
+				}
+			}
+			e.target.classList.toggle("flipped");
+			e.stopImmediatePropagation();
+			e.preventDefault();
+		}
+	});
+}
+function setHandler(query,onevent,callback){
+	var cols = document.querySelectorAll(query);
+	for (var len = cols.length, n = 0; n < len; n++){
+		cols[n].addEventListener(onevent, callback, false);
+	}
 }
