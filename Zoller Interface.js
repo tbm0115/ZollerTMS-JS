@@ -15,35 +15,6 @@
 // |**********************************************************************;
 
 // **************************************************************************
-// *****************************Global Variables*****************************
-//
-// Notes:
-//     graphicSuffixes: A list of potential suffixes regarding the 
-//     GraphicGroup and GraphicFile nodes in the raw XML 
-//     structure.
-//     
-//     _imageLargePreviewSize:
-//     An object specifying the preference for the rendering size for a 
-//     large image.
-//     
-//     _imageMediumPreviewSize:
-//     An object specifying the preference for the rendering size for a 
-//     medium image.
-//     
-//     _imageSmallPreviewSize:
-//     An object specifying the preference for the rendering size for a 
-//     small image. 
-//
-// **************************************************************************
-
-var graphicSuffixes = ["", "1", "2", "3", "4", "5", "6", "7", "8"]; // Graphic suffixes
-var _imageLargePreviewSize = { width: 150, height: 150 };
-var _imageMediumPreviewSize = { width: 75, height: 75 };
-var _imageSmallPreviewSize = { width: 50, height: 50 };
-var _interfaceSizes = ["sm", "md", "lg"];
-var _DefaultInterfaceSize = _interfaceSizes[2];
-var _AllowEdit = false;
-// **************************************************************************
 // ***************************Web Service Objects***************************
 //
 // Notes:
@@ -55,11 +26,13 @@ var _AllowEdit = false;
 // **************************************************************************
 
 function ZollerAdapter(id) {
+	this.isNull = false;
+	this.AdapterId = "";
+	this.Name = "";
+	this.AdapterType = "";
+	this.Images = [];
+	this.CustomProperties = {};
   if (id == undefined) {
-    this.AdapterId = "";
-    this.Name = "";
-    this.AdapterType = "";
-    this.Images = [];
     this.GetZollerData = function (id) {
       return new ZollerAdapter(id);
     }
@@ -67,26 +40,19 @@ function ZollerAdapter(id) {
 
   this.XML;
   this.SetXML = function (xml) {
-    this.XML = xml;
-    if (xml.firstChild != null && xml.firstChild.hasAttribute != null) {
-      if (xml.firstChild.hasAttribute("result")) {
-        if (xml.firstChild.getAttribute("result") == "fail") {
-          console.log("Invalid response from TMS!");
-        }
-      }
-    }
+		this.XML = xml;
   }
 
   var nodeAdapter;
   if ((typeof id) == "string") {
-    this.XML = _WebRequest("GET", "Adapter/" + id + "?LoadSubData=true", this.SetXML);
+    this.XML = ZollerGlobal.Request.FromProxy("GET", "Adapter/" + id + "?LoadSubData=true", this.SetXML);
   } else if ((typeof id) == "object") {
     this.SetXML(id);
   } else {
     console.log("Invalid object type!");
-    return;
   }
   nodeAdapter = getNodeByTagName(this.XML, "Adapter");
+	if (nodeAdapter == undefined){this.isNull = true;return undefined;}
 
 	this.IsTrueZoller = true;
 	
@@ -115,16 +81,15 @@ function ZollerAdapter(id) {
     BarcodeDoRotation: getValue(adapPres, "BarcodeDoRotation"),
     BarcodeManualIllumination: getValue(adapPres, "BarcodeManualIllumination")
   }
-  this.Images = [];
-
+  
   // Iterate through each main node to find pertinent data for the current object. This is done to avoid getting data from SubData nodes
   for (var len = nodeAdapter.children.length, n = 0; n < len; n++) {
     // Iterate through the main nodes first as there are more nodes than suffixes
     if (nodeAdapter.children[n].tagName == "AdapterPresetter") {
       for (var blen = nodeAdapter.children[n].children.length, k = 0; k < blen; k++) {
-        for (var clen = graphicSuffixes.length, i = 0; i < clen; i++) {
+        for (var clen = ZollerGlobal.Graphics.Suffixes.length, i = 0; i < clen; i++) {
           // Iterate through the possible suffixes to see if the current node matches
-          if (nodeAdapter.children[n].children[k].tagName == "GraphicFile" + graphicSuffixes[i]) {
+          if (nodeAdapter.children[n].children[k].tagName == "GraphicFile" + ZollerGlobal.Graphics.Suffixes[i]) {
             this.Images.push(new ZollerGraphicImage(nodeAdapter.children[n].children[k].innerHTML, nodeAdapter.children[n].children[k + 1].innerHTML));
           }
         }
@@ -135,21 +100,23 @@ function ZollerAdapter(id) {
 }
 
 function ZollerMachine(id) {
+	this.isNull = false;
+	this.MachineId = "";
+	this.Name = "";
+	this.Description = "";
+	this.MagazineCapacity = "";
+	this.NCToDirectory = "";
+	this.NCFromDirectory = "";
+	this.MachineType = "";
+	this.Manufacturer = "";
+	this.Images = [];
+	this.Tools = [];
+	this.SettingSheets = [];
+	this.Accessories = [];
+	this.Adapters = [];
+	this.Documents = [];
+	this.CustomProperties = {};
   if (id == undefined) {
-    this.MachineId = '';
-    this.Name = '';
-    this.Description = '';
-    this.MagazineCapacity = '';
-    this.NCToDirectory = '';
-    this.NCFromDirectory = '';
-    this.MachineType = '';
-    this.Manufacturer = '';
-    this.Images = [];
-    this.Tools = [];
-    this.SettingSheets = [];
-    this.Accessories = [];
-    this.Adapters = [];
-    this.Documents = [];
     this.GetZollerData = function (id) {
       return new ZollerMachine(id);
     }
@@ -157,26 +124,19 @@ function ZollerMachine(id) {
 
   this.XML;
   this.SetXML = function (xml) {
-    this.XML = xml;
-    if (xml.firstChild != null && xml.firstChild.hasAttribute != null) {
-      if (xml.firstChild.hasAttribute("result")) {
-        if (xml.firstChild.getAttribute("result") == "fail") {
-          console.log("Invalid response from TMS!");
-        }
-      }
-    }
+		this.XML = xml;
   }
 
   var nodeMachine;
   if ((typeof id) == "string") {
-    this.XML = _WebRequest("GET", "Machine/" + id + "?LoadSubData=true", this.SetXML);
+    this.XML = ZollerGlobal.Request.FromProxy("GET", "Machine/" + id + "?LoadSubData=true", this.SetXML);
   } else if ((typeof id) == "object") {
     this.SetXML(id);
   } else {
     console.log("Invalid object type!");
-    return;
   }
   nodeMachine = getNodeByTagName(this.XML, "Machine");
+	if (nodeMachine == undefined){this.isNull = true;return undefined;}
 
 	this.IsTrueZoller = true;
 
@@ -196,19 +156,12 @@ function ZollerMachine(id) {
   this.Type = getValue(nodeMachine, "Type");
   this.Manufacturer = getValue(nodeMachine, "Manufacturer");
 
-  this.Images = [];
-  this.Tools = [];
-  this.SettingSheets = [];
-  this.Accessories = [];
-  this.Adapters = [];
-  this.Documents = [];
-
   // Iterate through each main node to find pertinent data for the current object. This is done to avoid getting data from SubData nodes
   for (var len = nodeMachine.children.length, n = 0; n < len; n++) {
     // Iterate through the main nodes first as there are more nodes than suffixes
-    for (var clen = graphicSuffixes.length, i = 0; i < clen; i++) {
+    for (var clen = ZollerGlobal.Graphics.Suffixes.length, i = 0; i < clen; i++) {
       // Iterate through the possible suffixes to see if the current node matches
-      if (nodeMachine.children[n].tagName == "GraphicFile" + graphicSuffixes[i]) {
+      if (nodeMachine.children[n].tagName == "GraphicFile" + ZollerGlobal.Graphics.Suffixes[i]) {
         this.Images.push(new ZollerGraphicImage(nodeMachine.children[n].innerHTML, nodeMachine.children[n + 1].innerHTML));
       }
     }
@@ -271,14 +224,18 @@ function ZollerMachine(id) {
 }
 
 function ZollerSettingSheet(id) {
+	this.isNull = false;
+	this.SettingSheetId = "";
+	this.Name = "";
+	this.WorkStep = "";
+	this.Machine;
+	this.Images = [];
+	this.Tools = [];
+	this.Fixtures = [];
+	this.MeasuringDevicesV2 = [];
+	this.Documents = [];
+	this.CustomProperties = {};
   if (id == undefined) {
-    this.SettingSheetId = '';
-    this.Name = '';
-    this.WorkStep = '';
-    this.Machine;
-    this.Images = [];
-    this.Tools = [];
-    this.Documents = [];
     this.GetZollerData = function (id) {
       return new ZollerSettingSheet(id);
     }
@@ -286,26 +243,19 @@ function ZollerSettingSheet(id) {
 
   this.XML;
   this.SetXML = function (xml) {
-    this.XML = xml;
-    if (xml.firstChild != null && xml.firstChild.hasAttribute != null) {
-      if (xml.firstChild.hasAttribute("result")) {
-        if (xml.firstChild.getAttribute("result") == "fail") {
-          console.log("Invalid response from TMS!");
-        }
-      }
-    }
+		this.XML = xml;
   }
 
   var nodeSettingSheet;
   if ((typeof id) == "string") {
-    this.XML = _WebRequest("GET", "SettingSheet/" + id + "?LoadSubData=true", this.SetXML);
+    this.XML = ZollerGlobal.Request.FromProxy("GET", "SettingSheet/" + id + "?LoadSubData=true", this.SetXML);
   } else if ((typeof id) == "object") {
     this.SetXML(id);
   } else {
     console.log("Invalid object type!");
-    return;
   }
   nodeSettingSheet = getNodeByTagName(this.XML, "SettingSheet");
+	if (nodeSettingSheet == undefined){this.isNull = true;return undefined;}
 
 	this.IsTrueZoller = true;
 	
@@ -317,11 +267,6 @@ function ZollerSettingSheet(id) {
   this.InvPhysical = getValue(nodeSettingSheet, "InvPhysical");
   this.InvFullCopy = getValue(nodeSettingSheet, "InvFullCopy");
 
-  this.Images = [];
-  this.Tools = [];
-  this.Documents = [];
-  this.Machine;
-
   // Iterate through each main node to find pertinent data for the current object. This is done to avoid getting data from SubData nodes
   for (var len = nodeSettingSheet.children.length, n = 0; n < len; n++) {
     // Get Machine of the SettingSheet
@@ -329,9 +274,9 @@ function ZollerSettingSheet(id) {
       this.Machine = new ZollerMachine(nodeSettingSheet.children[n]);
     }
     // Iterate through the main nodes first as there are more nodes than suffixes
-    for (var clen = graphicSuffixes.length, i = 0; i < clen; i++) {
+    for (var clen = ZollerGlobal.Graphics.Suffixes.length, i = 0; i < clen; i++) {
       // Iterate through the possible suffixes to see if the current node matches
-      if (nodeSettingSheet.children[n].tagName == "GraphicFile" + graphicSuffixes[i]) {
+      if (nodeSettingSheet.children[n].tagName == "GraphicFile" + ZollerGlobal.Graphics.Suffixes[i]) {
         this.Images.push(new ZollerGraphicImage(nodeSettingSheet.children[n].innerHTML, nodeSettingSheet.children[n + 1].innerHTML));
       }
     }
@@ -344,6 +289,36 @@ function ZollerSettingSheet(id) {
         }
       } else {
         console.log("No tools found in ToolList Data");
+      }
+    }
+		// Get Fixtures of the SettingSheet
+    if (nodeSettingSheet.children[n].tagName == "FixtureList") {
+      var fixts = getNodes(nodeSettingSheet.children[n], "FixtureInList");
+      if (fixts != undefined) {
+        for (var clen = fixts.length, i = 0; i < clen; i++) {
+					var fixt = new ZollerSubFixture();
+					fixt.Position = getValue(fixts[i], "Position");
+					fixt.Quantity = getValue(fixts[i], "Quantity");
+					fixt.Fixture = new ZollerFixture(getNodeByTagName(fixts[i], "Fixture"));
+					this.Fixtures.push(fixt);
+        }
+      } else {
+        console.log("No fixtures found in FixtureList Data");
+      }
+    }
+		// Get MeasuringDeviceV2 of the SettingSheet
+    if (nodeSettingSheet.children[n].tagName == "MeasuringDeviceV2List") {
+      var meass = getNodes(nodeSettingSheet.children[n], "MeasuringDeviceV2InList");
+      if (meass != undefined) {
+        for (var clen = meass.length, i = 0; i < clen; i++) {
+					var meas = new ZollerSubMeasuringDeviceV2();
+					meas.Position = getValue(meass[i], "Position");
+					meas.Quantity = getValue(meass[i], "Quantity");
+					meas.MeasuringDeviceV2 = new ZollerMeasuringDeviceV2(getNodeByTagName(meass[i], "MeasuringDeviceV2"));
+					this.MeasuringDevicesV2.push(meas);
+        }
+      } else {
+        console.log("No MeasuringDeviceV2 found in MeasuringDeviceV2List Data");
       }
     }
     // Get Documents of the Tool
@@ -361,14 +336,16 @@ function ZollerSettingSheet(id) {
 }
 
 function ZollerTool(id) {
+	this.isNull = false;
+	this.ToolId = "";
+	this.Description = "";
+	this.CharacteristicStructures = [];
+	this.Images = [];
+	this.SingleComponents = [];
+	this.Accessories = [];
+	this.Documents = [];
+	this.CustomProperties = {};
   if (id == undefined) {
-    this.ToolId = "";
-    this.Description = "";
-    this.CharacteristicStructures = [];
-    this.Images = [];
-    this.SingleComponents = [];
-    this.Accessories = [];
-    this.Documents = [];
     this.GetZollerData = function (id) {
       return new ZollerTool(id);
     }
@@ -377,14 +354,7 @@ function ZollerTool(id) {
 
   this.XML;
   this.SetXML = function (xml) {
-    this.XML = xml;
-    if (xml.firstChild != null && xml.firstChild.hasAttribute != null) {
-      if (xml.firstChild.hasAttribute("result")) {
-        if (xml.firstChild.getAttribute("result") == "fail") {
-          console.log("Invalid response from TMS!");
-        }
-      }
-    }
+		this.XML = xml;
   }
 
   // This function generates the HTML to be added to the document. 'Size' represents the preferred sizing of the interface for the user. The available options are 'sm', 'md', and 'lg'. These can be adjusted in 'Zoller Interface.css'.
@@ -404,12 +374,14 @@ function ZollerTool(id) {
     divId.setAttribute("title", "Tool Id: " + this.ToolId);
     divName.appendChild(divId);
 
-    if (this.SingleComponents.length > 0) {
-      var divCnt = document.createElement("span");
-      divCnt.setAttribute("class", "childcount");
-      divCnt.innerHTML = this.SingleComponents.length;
-      divName.appendChild(divCnt);
-    }
+		if (this.SingleComponents != undefined){
+			if (this.SingleComponents.length > 0) {
+				var divCnt = document.createElement("span");
+				divCnt.setAttribute("class", "childcount");
+				divCnt.innerHTML = this.SingleComponents.length;
+				divName.appendChild(divCnt);
+			}
+		}
 
     var pName = document.createElement("p");
     pName.setAttribute("title", this.Description);
@@ -417,18 +389,19 @@ function ZollerTool(id) {
     divName.appendChild(pName);
 
     var imgName = document.createElement("img");
-    if (this.Images.length > 0) {
-      imgName.src = this.Images[0].ImageURL;
-    }
+		if (this.Images != undefined){
+			if (this.Images.length > 0) {
+				imgName.src = this.Images[0].ImageURL;
+			}
+		}
     divName.appendChild(imgName);
 
-    if (!this.IsTrueZoller) {
-      if (_AllowEdit) { // Determines if the page allows the 'delete' functions to be added.
-        var delName = document.createElement("a");
-        delName.setAttribute("class", "delete");
-        divName.appendChild(delName);
-      }
-    } else {
+		if (ZollerGlobal.Graphics.AllowEdit && this.CanDelete) { // Determines if the page allows the 'delete' functions to be added.
+			var delName = document.createElement("a");
+			delName.setAttribute("class", "delete");
+			divName.appendChild(delName);
+		}
+    if (this.IsTrueZoller) {
       var zolIcon = document.createElement("span");
       zolIcon.setAttribute("class", "zollerLock");
       zolIcon.setAttribute("title", "This item is managed through Zoller TMS and relevant data cannot be edited.")
@@ -440,75 +413,73 @@ function ZollerTool(id) {
       divName.appendChild(zolIcon);
     }
 
-    if (_AllowEdit) { // Determines if the page allows the 'add component' functions to be added.
-      if (!this.IsTrueZoller) {
-        var btnName = document.createElement("a");
-        //btnName.setAttribute("type", "button");
-        btnName.setAttribute("class", "add-component");
-        divName.appendChild(btnName);
-      }
+    if (ZollerGlobal.Graphics.AllowEdit && !this.IsTrueZoller) { // Determines if the page allows the 'add component' functions to be added.
+			var btnName = document.createElement("a");
+			//btnName.setAttribute("type", "button");
+			btnName.setAttribute("class", "add-component");
+			divName.appendChild(btnName);
     }
 
-    if (this.Accessories.length > 0) {
-      // Draw drop-down button for sub-fixtures
-      var toolAccCount = document.createElement("span");
-      toolAccCount.setAttribute("class", "accessorycount");
-      var toolAccDropCount = document.createElement("a");
-      toolAccDropCount.setAttribute("class", "flip-item");
-      toolAccCount.appendChild(toolAccDropCount);
-      toolAccCount.innerHTML += this.Accessories.length;
-      divName.appendChild(toolAccCount);
-    }
+		if (this.Accessories != undefined){
+			if (this.Accessories.length > 0) {
+				// Draw drop-down button for sub-fixtures
+				var toolAccCount = document.createElement("span");
+				toolAccCount.setAttribute("class", "accessorycount");
+				var toolAccDropCount = document.createElement("a");
+				toolAccDropCount.setAttribute("class", "flip-item");
+				toolAccCount.appendChild(toolAccDropCount);
+				toolAccCount.innerHTML += this.Accessories.length;
+				divName.appendChild(toolAccCount);
+			}
+		}
 
     ass.appendChild(divName);
 
-    for (var len = this.SingleComponents.length, n = 0; n < len; n++) {
-      var divItem = document.createElement("div");
-      divItem.setAttribute("class", "assembly-item");
-      divItem.setAttribute("data-tool", this.ToolId);
-      divItem.setAttribute("data-component", this.SingleComponents[n].ComponentId);
-      divItem.setAttribute("draggable", _AllowEdit); // Only draggable if the page allows editing.
-      var aItem = document.createElement("a");
-      var pId = document.createElement("p");
-      pId.innerHTML = this.SingleComponents[n].ComponentId;
-      pId.setAttribute("title", "Component Id");
-      aItem.appendChild(pId);
-      var pDescription = document.createElement("p");
-      if (this.SingleComponents[n].SpecialDescription) {
-        pDescription.innerHTML = this.SingleComponents[n].SpecialDescription;
-      } else {
-        pDescription.innerHTML = this.SingleComponents[n].Description;
-      }
-      aItem.appendChild(pDescription);
-      var divItemImg = document.createElement("div");
-      divItemImg.setAttribute("class", "item-image");
-      var imgItem = document.createElement("img");
-      if (this.SingleComponents[n].Images.length > 0) {
-        imgItem.setAttribute("src", this.SingleComponents[n].Images[0].ImageURL);
-      }
-      divItemImg.appendChild(imgItem);
-      aItem.appendChild(divItemImg);
-      divItem.appendChild(aItem);
-      if (_AllowEdit) { // Determines if the page allows the 'delete' functions to be added to the component.
-        if (!this.IsTrueZoller) {
-          var delItem = document.createElement("a");
-          delItem.setAttribute("class", "delete");
-          divItem.appendChild(delItem);
-        }
-      }
+		if (this.SingleComponents != undefined){
+			for (var len = this.SingleComponents.length, n = 0; n < len; n++) {
+				var divItem = document.createElement("div");
+				divItem.setAttribute("class", "assembly-item");
+				divItem.setAttribute("data-tool", this.ToolId);
+				divItem.setAttribute("data-component", this.SingleComponents[n].ComponentId);
+				divItem.setAttribute("draggable", ZollerGlobal.Graphics.AllowEdit); // Only draggable if the page allows editing.
+				var aItem = document.createElement("a");
+				var pId = document.createElement("p");
+				pId.innerHTML = this.SingleComponents[n].ComponentId;
+				pId.setAttribute("title", "Component Id");
+				aItem.appendChild(pId);
+				var pDescription = document.createElement("p");
+				pDescription.innerHTML = this.SingleComponents[n].Description;
+				aItem.appendChild(pDescription);
+				var divItemImg = document.createElement("div");
+				divItemImg.setAttribute("class", "item-image");
+				var imgItem = document.createElement("img");
+				if (this.SingleComponents[n].Images.length > 0) {
+					imgItem.setAttribute("src", this.SingleComponents[n].Images[0].ImageURL);
+				}
+				divItemImg.appendChild(imgItem);
+				aItem.appendChild(divItemImg);
+				divItem.appendChild(aItem);
+				if (ZollerGlobal.Graphics.AllowEdit && !this.IsTrueZoller && this.SingleComponents[n].CanDelete) { // Determines if the page allows the 'delete' functions to be added to the component.
+					var delItem = document.createElement("a");
+					delItem.setAttribute("class", "delete");
+					divItem.appendChild(delItem);
+				}
 
-      ass.appendChild(divItem);
-    }
+				ass.appendChild(divItem);
+			}
+		}
 
-    if (this.Accessories.length > 0) {
-      // Draw accessories
-      var toolCol4 = document.createElement("div");
-      toolCol4.setAttribute("class", "accessory-sub");
-      for (var len = this.Accessories.length, n = 0; n < len; n++) {
-        toolCol4.appendChild(this.Accessories[n].DrawHTML("sm", theme))
-      }
-      ass.appendChild(toolCol4);
-    }
+		if (this.Accessories != undefined){
+			if (this.Accessories.length > 0) {
+				// Draw accessories
+				var toolCol4 = document.createElement("div");
+				toolCol4.setAttribute("class", "accessory-sub");
+				for (var len = this.Accessories.length, n = 0; n < len; n++) {
+					toolCol4.appendChild(this.Accessories[n].DrawHTML("sm", theme))
+				}
+				ass.appendChild(toolCol4);
+			}
+		}
 
     if (typeof parent !== "undefined" && parent !== undefined) {
       if (overwrite !== undefined || overwrite == false) {
@@ -519,10 +490,10 @@ function ZollerTool(id) {
         } else {
           parent.appendChild(ass);
         }
-        setHandlers();
+        ZollerGlobal.Set.Handlers();
       } else {
         parent.appendChild(ass);
-        setHandlers();
+        ZollerGlobal.Set.Handlers();
       }
     }
     return ass;
@@ -533,37 +504,40 @@ function ZollerTool(id) {
 
   // This function can be altered to generate a custom XML structure to store Tool assemblies in non-Zoller storage. It is important that this is defined before SetXML() to avoid an undefined function.
   this.GetXML = function () {
-    var out = "<Assembly id=\"" + this.ToolId + "\" name=\"" + this.Description.replace(/'/g, "&apos;").replace(/"/g, "&quot;") + "\" iszoller=\"" + this.IsTrueZoller + "\">";
-    if (this.SingleComponents != undefined) {
-      for (var len = this.SingleComponents.length, n = 0; n < len; n++) {
-        out += "<Tool id=\"" + this.SingleComponents[n].ComponentId + "\">";
-        for (a = 0; a < this.SingleComponents[n].CharacteristicStructures.length; a++) {
-          if (this.SingleComponents[n].CharacteristicStructures[a].System == "SSS") {
-            for (b = 0; b < this.SingleComponents[n].CharacteristicStructures[a].Characteristics.length; b++) {
-              out += "<Characteristic label=\"" + this.SingleComponents[n].CharacteristicStructures[a].Characteristics[b].Label.replace(/'/g, "&apos;").replace(/"/g, "&quot;") + "\">";
-              out += this.SingleComponents[n].CharacteristicStructures[a].Characteristics[b].Value + "</Characteristics>";
-            }
-          }
-        }
-        out += "<Notes>" + this.SingleComponents[n].Notes + "</Notes>";
-        out += "</Tool>";
-      }
-    }
-    out += "</Assembly>";
-    return out;
+		var out = [];
+		if (!this.IsTrueZoller){
+			out.push("<Assembly id=\"" + this.ToolId + "\" name=\"" + this.Description.replace(/'/g, "&apos;").replace(/"/g, "&quot;") + "\">");// iszoller=\"" + this.IsTrueZoller + "\"
+			if (this.SingleComponents != undefined) {
+				for (var len = this.SingleComponents.length, n = 0; n < len; n++) {
+					out.push("<Tool id=\"" + this.SingleComponents[n].ComponentId + "\">");
+					for (a = 0; a < this.SingleComponents[n].CharacteristicStructures.length; a++) {
+						if (this.SingleComponents[n].CharacteristicStructures[a].System == "SSS") {
+							for (b = 0; b < this.SingleComponents[n].CharacteristicStructures[a].Characteristics.length; b++) {
+								out.push("<Characteristic label=\"" + this.SingleComponents[n].CharacteristicStructures[a].Characteristics[b].Label.replace(/'/g, "&apos;").replace(/"/g, "&quot;") + "\">");
+								out.push(this.SingleComponents[n].CharacteristicStructures[a].Characteristics[b].Value + "</Characteristics>");
+							}
+						}
+					}
+					out.push("<Notes>" + this.SingleComponents[n].Notes + "</Notes>");
+					out.push("</Tool>");
+				}
+			}
+			out.push("</Assembly>");
+		}
+    return out.join("");
   }
 
   // Determine if the object is a valid Zoller object by attempting to get data from the Zoller WebService.
   var nodeTool;
   if ((typeof id) == "string") {
-    this.XML = _WebRequest("GET", "Tool/" + id + "?LoadSubData=true", this.SetXML);
+    this.XML = ZollerGlobal.Request.FromProxy("GET", "Tool/" + id + "?LoadSubData=true", this.SetXML);
   } else if ((typeof id) == "object") {
     this.SetXML(id);
   } else {
     console.log("Invalid object type!");
-    return;
   }
   nodeTool = getNodeByTagName(this.XML, "Tool");
+	if (nodeTool == undefined){this.isNull = true;return undefined;}
 
   this.IsTrueZoller = true; // Custom property
   this.Collected = false; // Custom property, flag determining if the tool items have been physically collected.
@@ -571,7 +545,7 @@ function ZollerTool(id) {
   this.ToolId = getValue(nodeTool, "ToolId");
   this.Description = getValue(nodeTool, "Description");// Grabbing the global value is okay because it only returns the first instance of the object
   this.TNo = getValue(nodeTool, "TNo");
-  this.LongComment = convertToPlain(getValue(nodeTool, "LongComment"));
+  this.LongComment = Convert.RTFToPlainText(getValue(nodeTool, "LongComment"));
   this.Wobble = getValue(nodeTool, "Wobble");
   this.DxfDisplayMode = getValue(nodeTool, "DxfDisplayMode");
   this.VerifiedForMeasuring = getValue(nodeTool, "VerifiedForMeasuring");
@@ -591,11 +565,6 @@ function ZollerTool(id) {
   this.UsedAdapterId = getValue(nodeTool, "UsedAdapterId");
   this.UsedAdapterName = getValue(nodeTool, "UsedAdapterName");
 
-  this.CharacteristicStructures = [];
-  this.Images = [];
-  this.SingleComponents = [];
-  this.Accessories = [];
-  this.Documents = [];
   this.SVG = getValue(nodeTool, "ScalableVectorGraphic");// Get the most pertinent SVG data if available.
 
 
@@ -605,9 +574,9 @@ function ZollerTool(id) {
       this.CharacteristicStructures.push(new ZollerCharacteristicStructure(nodeTool.children[n]));
     }
     // Iterate through the main nodes first as there are more nodes than suffixes
-    for (var clen = graphicSuffixes.length, i = 0; i < clen; i++) {
+    for (var clen = ZollerGlobal.Graphics.Suffixes.length, i = 0; i < clen; i++) {
       // Iterate through the possible suffixes to see if the current node matches
-      if (nodeTool.children[n].tagName == "GraphicFile" + graphicSuffixes[i]) {
+      if (nodeTool.children[n].tagName == "GraphicFile" + ZollerGlobal.Graphics.Suffixes[i]) {
         this.Images.push(new ZollerGraphicImage(nodeTool.children[n].innerHTML, nodeTool.children[n + 1].innerHTML));
       }
     }
@@ -617,6 +586,7 @@ function ZollerTool(id) {
       if (cmpnts != undefined) {
         for (var clen = cmpnts.length, i = 0; i < clen; i++) {
           this.SingleComponents.push(new ZollerSingleComponent(cmpnts[i]));// Send XML structure. Only captured using LoadSubData query.
+					this.SingleComponents[this.SingleComponents.length-1].IsTrueZoller = true;
         }
       } else {
         console.log("No components found in Article Data");
@@ -642,16 +612,26 @@ function ZollerTool(id) {
       }
     }
   }
+	
+	this.Convert = function(newUnits){
+		for (var len = this.CharacteristicStructures.length, n = 0; n < len; n++){
+			for (var clen = this.CharacteristicStructures[n].length, m = 0; m < clen; m++){
+				this.CharacteristicStructures[n].Characteristics[m].Convert(newUnits);
+			}
+		}
+	}
 }
 
 function ZollerSingleComponent(id) {
+	this.isNull = false;
+	this.ComponentId = "";
+	this.Description = "";
+	this.CharacteristicStructures = [];
+	this.Images = [];
+	this.Accessories = [];
+	this.Documents = [];
+	this.CustomProperties = {};
   if (id == undefined) {
-    this.ComponentId = "";
-    this.Description = "";
-    this.CharacteristicStructures = [];
-    this.Images = [];
-    this.Accessories = [];
-    this.Documents = [];
     this.GetZollerData = function (id) {
       return new ZollerSingleComponent(id);
     }
@@ -659,34 +639,29 @@ function ZollerSingleComponent(id) {
 
   this.XML;
   this.SetXML = function (xml) {
-    this.XML = xml;
-    if (xml.firstChild != null && xml.firstChild.hasAttribute != null) {
-      if (xml.firstChild.hasAttribute("result")) {
-        if (xml.firstChild.getAttribute("result") == "fail") {
-          console.log("Invalid response from TMS!");
-        }
-      }
-    }
+		this.XML = xml;
   }
 
   // Determine if the object is a valid Zoller object by attempting to get data from the Zoller WebService.
   var nodeComponent;
   if ((typeof id) == "string") {
-    this.XML = _WebRequest("GET", "Component/" + id + "?LoadSubData=true", this.SetXML);
+    this.XML = ZollerGlobal.Request.FromProxy("GET", "Component/" + id + "?LoadSubData=true", this.SetXML);
   } else if ((typeof id) == "object") {
     this.SetXML(id);
   } else {
     console.log("Invalid object type!");
-    return;
   }
   nodeComponent = getNodeByTagName(this.XML, "Component");
+	if (nodeComponent == undefined){this.isNull = true;return undefined;}
 
+	this.IsTrueZoller = false;
+	
   this.ComponentId = getValue(nodeComponent, "ComponentId");
   this.Description = getValue(nodeComponent, "Description");
   this.PartClass = getValue(nodeComponent, "PartClass");
   this.SubjectNo = getValue(nodeComponent, "SubjectNo");
   this.Norm = getValue(nodeComponent, "Norm");
-  this.LongComment = convertToPlain(getValue(nodeComponent, "LongComment"));
+  this.LongComment = Convert.RTFToPlainText(getValue(nodeComponent, "LongComment"));
   this.StorageUse = getValue(nodeComponent, "StorageUse");
   this.InterfaceCodingToolSide = getValue(nodeComponent, "InterfaceCodingToolSide");
   this.InterfaceCodingMachineSide = getValue(nodeComponent, "InterfaceCodingMachineSide");
@@ -697,12 +672,7 @@ function ZollerSingleComponent(id) {
   this.InvPhysical = getValue(nodeComponent, "InvPhysical");
   this.InvFullCopy = getValue(nodeComponent, "InvFullCopy");
   this.SVG = getValue(nodeComponent, "ScalableVectorGraphic");
-
-  this.CharacteristicStructures = [];
-  this.Images = [];
-  this.Accessories = [];
-  this.Documents = [];
-
+	
   this.EDP = getValue(nodeComponent, "SubjectNo"); // Custom property
   this.OrderCode = getValue(nodeComponent, "Norm"); // Custom property
   this.Notes = ""; // Custom property
@@ -713,9 +683,9 @@ function ZollerSingleComponent(id) {
       this.CharacteristicStructures.push(new ZollerCharacteristicStructure(nodeComponent.children[n]));
     }
     // Iterate through the main nodes first as there are more nodes than suffixes
-    for (var clen = graphicSuffixes.length, i = 0; i < clen; i++) {
+    for (var clen = ZollerGlobal.Graphics.Suffixes.length, i = 0; i < clen; i++) {
       // Iterate through the possible suffixes to see if the current node matches
-      if (nodeComponent.children[n].tagName == "GraphicFile" + graphicSuffixes[i]) {
+      if (nodeComponent.children[n].tagName == "GraphicFile" + ZollerGlobal.Graphics.Suffixes[i]) {
         this.Images.push(new ZollerGraphicImage(nodeComponent.children[n].innerHTML, nodeComponent.children[n + 1].innerHTML));
       }
     }
@@ -751,12 +721,22 @@ function ZollerSingleComponent(id) {
       this.Category = nodeComponent.children[n].innerHTML;
     }
   }
+	
+	this.Convert = function(newUnits){
+		for (var len = this.CharacteristicStructures.length, n = 0; n < len; n++){
+			for (var clen = this.CharacteristicStructures[n].length, m = 0; m < clen; m++){
+				this.CharacteristicStructures[n].Characteristics[m].Convert(newUnits);
+			}
+		}
+	}
 }
 
 function ZollerAccessory(id) {
+	this.isNull = false;
+	this.AccessoryId = "";
+	this.Description = "";
+	this.CustomProperties = {};
   if (id == undefined) {
-    this.AccessoryId = '';
-    this.Description = '';
     this.GetZollerData = function (id) {
       return new ZollerSettingSheet(id);
     }
@@ -764,14 +744,7 @@ function ZollerAccessory(id) {
 
   this.XML;
   this.SetXML = function (xml) {
-    this.XML = xml;
-    if (xml.firstChild != null && xml.firstChild.hasAttribute != null) {
-      if (xml.firstChild.hasAttribute("result")) {
-        if (xml.firstChild.getAttribute("result") == "fail") {
-          console.log("Invalid response from TMS!");
-        }
-      }
-    }
+		this.XML = xml;
   }
 
   this.GetJSON = function () {
@@ -804,7 +777,7 @@ function ZollerAccessory(id) {
     divName.appendChild(imgName);
 
     // Draw Zoller lock if applicable
-		if (_AllowEdit && this.CanDelete) { // Determines if the page allows the 'delete' functions to be added.
+		if (ZollerGlobal.Graphics.AllowEdit && this.CanDelete) { // Determines if the page allows the 'delete' functions to be added.
 			var delName = document.createElement("a");
 			delName.setAttribute("class", "delete");
 			divName.appendChild(delName);
@@ -851,10 +824,10 @@ function ZollerAccessory(id) {
         } else {
           parent.appendChild(divMain);
         }
-        setHandlers();
+        ZollerGlobal.Set.Handlers();
       } else {
         parent.appendChild(divMain);
-        setHandlers();
+        ZollerGlobal.Set.Handlers();
       }
     }
     return divMain;
@@ -862,14 +835,14 @@ function ZollerAccessory(id) {
 
   var nodeAccessory;
   if ((typeof id) == "string") {
-    this.XML = _WebRequest("GET", "Accessory/" + id + "?LoadSubData=true", this.SetXML);
+    this.XML = ZollerGlobal.Request.FromProxy("GET", "Accessory/" + id + "?LoadSubData=true", this.SetXML);
   } else if ((typeof id) == "object") {
     this.SetXML(id);
   } else {
     console.log("Invalid object type!");
-    return;
   }
   nodeAccessory = getNodeByTagName(this.XML, "Accessory");
+	if (nodeAccessory == undefined){this.isNull = true;return undefined;}
 
   this.AccessoryId = getValue(nodeAccessory, "AccessoryId");
 
@@ -877,7 +850,7 @@ function ZollerAccessory(id) {
 	this.CanDelete = false;
 	
   this.Description = getValue(nodeAccessory, "Description");
-  this.LongComment = convertToPlain(getValue(nodeAccessory, "LongComment"));
+  this.LongComment = Convert.RTFToPlainText(getValue(nodeAccessory, "LongComment"));
   this.Standard = getValue(nodeAccessory, "Norm");
   this.Lifetime = getValue(nodeAccessory, "Lifetime");
   this.Image = new ZollerGraphicImage(getValue(nodeAccessory, "GraphicFile"), getValue(nodeAccessory, "GraphicGroup"));
@@ -901,9 +874,14 @@ function ZollerAccessory(id) {
 }
 
 function ZollerFixture(id) {
-  if (id == undefined) {
-    this.FixtureId = "";
-    this.Description = "";
+	this.isNull = false;
+	this.FixtureId = "";
+	this.Description = "";
+  this.Fixtures = [];
+  this.Accessories = [];
+  this.Documents = [];
+	this.CustomProperties = {};
+if (id == undefined) {
     this.GetZollerData = function (id) {
       return new ZollerFixture(id);
     }
@@ -911,24 +889,18 @@ function ZollerFixture(id) {
 
   this.XML;
   this.SetXML = function (xml) {
-    this.XML = xml;
-    if (xml.firstChild != null && xml.firstChild.hasAttribute != null) {
-      if (xml.firstChild.hasAttribute("result")) {
-        if (xml.firstChild.getAttribute("result") == "fail") {
-          console.log("Invalid response from TMS!");
-        }
-      }
-    }
+		this.XML = xml;
   }
 
   this.GetJSON = function () {
-    var out = "{\"id\":\"" + this.FixtureId + "\",";
-    out += "\"Notes\":\"" + ((this.Notes != undefined) ? this.Notes.replace(/'/g, "&apos;").replace(/"/g, "&quot;") + "\"," : "\",");
-    out += "\"PalletJawNo\":\"" + ((this.PalletJawNo != undefined) ? this.PalletJawNo.replace(/'/g, "&apos;").replace(/"/g, "&quot;") + "\"," : "\",");
-    out += "\"ClampingPressure\":\"" + ((this.ClampingPressure != undefined) ? this.ClampingPressure.replace(/'/g, "&apos;").replace(/"/g, "&quot;") + "\"," : "\",");
-    out += "\"ClampingDiagram\":\"" + ((this.ClampingDiagram != undefined) ? this.ClampingDiagram.replace(/'/g, "&apos;").replace(/"/g, "&quot;") + "\"," : "\",");
-    out += "\"Remark\":\"" + ((this.Remakr != undefined) ? this.Remark.replace(/'/g, "&apos;").replace(/"/g, "&quot;") + "\"" : "\"");
-    out += "}";
+    var out = "{\"id\":\"" + this.FixtureId + "\"";
+		var props = Object.getOwnPropertyNames(this.CustomProperties);
+		if (props.length > 0){
+			for (var len = props.length, n = 0; n < len; n++){
+				out += ",\"" + props[n] + "\":\"" + this.CustomProperties[props[n]].replace(/'/g, "&apos;").replace(/"/g, "&quot;") + "\"";
+			}
+		}
+		out += "}";
     return out;
   }
 
@@ -968,14 +940,62 @@ function ZollerFixture(id) {
     }
     fixtCol1.appendChild(fixtImg);
 
-    // Draw Notes
+		// Draw Details panel
+		if (Object.getOwnPropertyNames(this.CustomProperties)){
+			var props = Object.getOwnPropertyNames(this.CustomProperties);
+			if (props.length > 0){
+				var fixtCol15 = document.createElement("div");
+				fixtCol15.setAttribute("class", "fixture-details");
+				var fixtCol15Row;
+				var idx = 0;
+				for (var len = props.length, n = 0; n < len; n++){
+					if (this.CustomProperties[props[n]] != undefined && this.CustomProperties[props[n]] != ""){
+						if (ZollerGlobal.AllowEdit){
+							if (idx == 0 || idx > 1){
+								if (idx > 0){
+									fixtCol15.appendChild(fixtCol15Row);
+								}
+								fixtCol15Row = document.createElement("div");
+								fixtCol15Row.setAttribute("class", "row");
+								idx = 0;
+							}
+							var fixtCol15Col = document.createElement("div");
+							fixtCol15Col.setAttribute("class", "col-lg-6 col-md-6 col-sm-6 col-xs-6");
+							var lbl = document.createElement("label");
+							lbl.setAttribute("class", "label label-primary");
+							lbl.setAttribute("for", "txtZollerCP" + n);
+							lbl.innerText = props[n];
+							var txt = document.createElement("input");
+							txt.setAttribute("class", "form-control");
+							txt.setAttribute("value", this.CustomProperties[props[n]]);
+							txt.disabled = !ZollerGlobal.AllowEdit;
+							txt.id = "txtZollerCP" + n;
+							fixtCol15Col.appendChild(lbl);
+							fixtCol15Col.appendChild(txt);
+							fixtCol15Row.appendChild(fixtCol15Col);
+							idx += 1;
+						}else{ // Read-Only mode, so lets compile the characteristics in the notes as HTML
+							var charDiv = document.createElement("div");
+							charDiv.innerHTML = "<strong><u>" + props[n] + "</u></strong>: " + this.CustomProperties[props[n]] + "<br />";
+							fixtCol15.appendChild(charDiv);
+						}
+					}
+				}
+				if (fixtCol15Row != undefined){
+					if (fixtCol15Row.children.length > 0){
+						fixtCol15.appendChild(fixtCol15Row);
+					}
+				}
+				if (fixtCol15.children.length == 0){ fixtCol15 = undefined }
+			}
+		}
+		
+		// Draw Notes panel
     var fixtCol2 = document.createElement("div");
     fixtCol2.setAttribute("class", "fixture-item");
     var fixtNotes = document.createElement("textarea");
     fixtNotes.disabled = true;
-    if (this.Notes != undefined && this.Notes != "") {
-      fixtNotes.value = this.Notes;
-    } else if (this.LongComment != undefined && this.LongComment != "") {
+    if (this.LongComment != undefined && this.LongComment != "") {
       fixtNotes.value = "[Zoller Comment] " + this.LongComment;
     } else if (this.ClampingDescription != undefined && this.ClampingDescription != "") {
       fixtNotes.value = "[Zoller Clamping] " + this.ClampingDescription;
@@ -983,15 +1003,18 @@ function ZollerFixture(id) {
     fixtCol2.appendChild(fixtNotes);
 
     // Draw Zoller lock if applicable
-		if (_AllowEdit && this.CanDelete) { // Determines if the page allows the 'delete' functions to be added.
+		if (ZollerGlobal.Graphics.AllowEdit && this.CanDelete) { // Determines if the page allows the 'delete' functions to be added.
 			var delName = document.createElement("a");
 			delName.setAttribute("class", "delete");
 			fixtCol1.appendChild(delName);
-		}
-    
+		}    
 
     fixt.appendChild(fixtCol1);
-    fixt.appendChild(fixtCol2);
+		if (fixtCol15 != undefined){
+			fixt.appendChild(fixtCol15)
+		}else{
+			fixt.appendChild(fixtCol2);
+		}
 
     // Add current instance of a fixture has sub fixtures, then add the HTML
     if (this.Fixtures.length > 0) {
@@ -999,10 +1022,11 @@ function ZollerFixture(id) {
       var fixtCol3 = document.createElement("div");
       fixtCol3.setAttribute("class", "fixture-sub");
       for (var len = this.Fixtures.length, n = 0; n < len; n++) {
-        fixtCol3.appendChild(this.Fixtures[n].DrawHTML("sm", theme))
+        fixtCol3.appendChild(this.Fixtures[n].Fixture.DrawHTML("sm", theme))
+				fixtCol3.childNodes[fixtCol3.childNodes.length-1].setAttribute("data-quantity",this.Fixtures[n].Quantity);
       }
       fixt.appendChild(fixtCol3);
-      fixt.innerHTML += "<hr/>";
+      //fixt.innerHTML += "<hr/>";
     }
 
     if (this.Accessories.length > 0) {
@@ -1010,7 +1034,8 @@ function ZollerFixture(id) {
       var fixtCol4 = document.createElement("div");
       fixtCol4.setAttribute("class", "accessory-sub");
       for (var len = this.Accessories.length, n = 0; n < len; n++) {
-        fixtCol4.appendChild(this.Accessories[n].DrawHTML("sm", theme))
+        fixtCol4.appendChild(this.Accessories[n].Accessory.DrawHTML("sm", theme))
+				fixtCol4.childNodes[fixtCol4.childNodes.length-1].setAttribute("data-quantity",this.Accessories[n].Quantity);
       }
       fixt.appendChild(fixtCol4);
     }
@@ -1024,25 +1049,75 @@ function ZollerFixture(id) {
         } else {
           parent.appendChild(fixt);
         }
-        setHandlers();
+        ZollerGlobal.Set.Handlers();
       } else {
         parent.appendChild(fixt);
-        setHandlers();
+        ZollerGlobal.Set.Handlers();
       }
     }
     return fixt;
   }
 
+	this.DrawHTMLList = function(size, theme, parent, overwrite) {
+    var fixt = document.createElement("li");
+    fixt.setAttribute("class", "fixture fixture-" + size + " theme-" + theme);
+    fixt.setAttribute("data-fixture", this.FixtureId);
+		
+		var name = document.createElement("div");
+		name.innerHTML = "<sup>[" + this.FixtureId + "]</sup> " + this.Description;
+		fixt.appendChild(name);
+		
+		
+		if (this.Fixtures.length > 0){
+      // Draw drop-down button for sub-fixtures
+      var fixtSubCount = document.createElement("span");
+      var fixtSubDropCount = document.createElement("a");
+      fixtSubCount.appendChild(fixtSubDropCount);
+      fixtSubCount.innerHTML += this.Fixtures.length;
+			name.appendChild(fixtSubCount);
+			// Add HTML List items
+			var sub = document.createElement("ul");
+			for(var len = this.Fixtures.length, n = 0; n < len; n++){
+				sub.appendChild(this.Fixtures[n].Fixture.DrawHTMLList(size, theme));
+				sub.childNodes[sub.childNodes.length-1].setAttribute("data-quantity",this.Fixtures[n].Quantity);
+			}
+			fixt.appendChild(sub);
+		}
+    // Draw Zoller lock if applicable
+		if (ZollerGlobal.Graphics.AllowEdit && this.CanDelete) { // Determines if the page allows the 'delete' functions to be added.
+			var delName = document.createElement("a");
+			delName.setAttribute("class", "delete");
+			name.appendChild(delName);
+		}
+
+    if (typeof parent !== "undefined" && parent !== undefined) {
+      if (overwrite !== undefined || overwrite == false) {
+        var ex = parent.querySelector("[data-fixture='" + this.FixtureId + "']").parentElement;
+        if (ex !== undefined) {
+          parent.insertBefore(fixt, ex);
+          parent.removeChild(ex);
+        } else {
+          parent.appendChild(fixt);
+        }
+        ZollerGlobal.Set.Handlers();
+      } else {
+        parent.appendChild(fixt);
+        ZollerGlobal.Set.Handlers();
+      }
+    }
+    return fixt;
+	}
+	
   var nodeFixture;
   if ((typeof id) == "string") {
-    this.XML = _WebRequest("GET", "Fixture/" + id + "?LoadSubData=true", this.SetXML);
+    this.XML = ZollerGlobal.Request.FromProxy("GET", "Fixture/" + id + "?LoadSubData=true", this.SetXML);
   } else if ((typeof id) == "object") {
     this.SetXML(id);
   } else {
     console.log("Invalid object type!");
-    return;
   }
   nodeFixture = getNodeByTagName(this.XML, "Fixture");
+	if (nodeFixture == undefined){this.isNull = true;return undefined;}
 
   this.FixtureId = getValue(nodeFixture, "FixtureId");
 
@@ -1060,26 +1135,26 @@ function ZollerFixture(id) {
   this.InvMode = getValue(nodeFixture, "InvMode");
   this.InvPhysical = getValue(nodeFixture, "InvPhysical");
   this.InvFullCopy = getValue(nodeFixture, "InvFullCopy");
-  this.LongComment = convertToPlain(getValue(nodeFixture, "LongComment"));
+  this.LongComment = Convert.RTFToPlainText(getValue(nodeFixture, "LongComment"));
   this.Image = new ZollerGraphicImage(getValue(nodeFixture, "GraphicFile"), getValue(nodeFixture, "GraphicGroup"));
-  this.Fixtures = [];
-  this.Accessories = [];
-  this.Documents = [];
-
-  this.Notes = ""; // Custom property
-  this.PalletJawNo = ""; // Custom property
-  this.ClampingPressure = ""; // Custom property
-  this.ClampingDiagram = ""; // Custom property
-  this.Remark = ""; // Custom property
+  
+	this.CustomProperties = {};//This is a placeholder for all custom properties
 
   // Iterate through each main node to find pertinent data for the current object. This is done to avoid getting data from SubData nodes
   for (var len = nodeFixture.children.length, n = 0; n < len; n++) {
     // Get Components and Accessories of the Fixture
     if (nodeFixture.children[n].tagName == "Article") {
-      cmpnts = getNodes(nodeFixture.children[n], "Accessory");
+      cmpnts = getNodes(nodeFixture.children[n], "AccessoryInList");
       if (cmpnts != undefined) {
         for (var clen = cmpnts.length, i = 0; i < clen; i++) {
-          this.Accessories.push(new ZollerAccessory(cmpnts[i]));// Send XML structure. Only captured using LoadSubData query.
+					var aid = getValue(cmpnts[i], "AccessoryId");
+					if (aid != undefined && typeof aid != "undefined"){
+						var nwSubAcc = new ZollerSubAccessory();
+						nwSubAcc.Position = Number(getValue(cmpnts[i], "Position"));
+						nwSubAcc.Quantity = Number(getValue(cmpnts[i], "Quantity"));
+						nwSubAcc.Accessory = new ZollerAccessory(aid);
+						this.Accessories.push(nwSubAcc);// Send XML structure. Only captured using LoadSubData query.
+					}
         }
       } else {
         console.log("No accessories found in Article Data");
@@ -1097,22 +1172,61 @@ function ZollerFixture(id) {
       }
     }
     if (nodeFixture.children[n].tagName == "FixtureSubList") {
-      var subfixts = getNodes(nodeFixture.children[n], "Fixture");
-      for (var flen = subfixts.length, m = 0; m < flen; m++) {
-        var fid = getValue(subfixts[m], "FixtureId");
-        if (fid != undefined && typeof fid != "undefined") {
-          var nwFixture = new ZollerFixture(fid);
-					this.Fixtures.push(nwFixture);
-        }
-      }
+      var subfixts = getNodes(nodeFixture.children[n], "FixtureInList");
+			if (subfixts.length > 0){
+				for (var flen = subfixts.length, m = 0; m < flen; m++) {
+					//var fixtu = getNodeByTagName(subfixts[m],"Fixture");
+					var fid = getValue(subfixts[m], "FixtureId");
+					if (fid != undefined && typeof fid != "undefined") {
+						var nwSubFixtu = new ZollerSubFixture();
+						nwSubFixtu.Position = Number(getValue(subfixts[m], "Position"));
+						nwSubFixtu.Quantity = Number(getValue(subfixts[m], "Quantity"));
+						nwSubFixtu.Fixture = new ZollerFixture(fid);
+						this.Fixtures.push(nwSubFixtu);
+					}
+				}
+			}
     }
   }
+	// Rearrange Sub-Fixtures
+	if (this.Fixtures.length > 0){
+		var cntGood = 0;
+		while (cntGood < this.Fixtures.length){
+			cntGood = 0;
+			for (var len = this.Fixtures.length, n = 0; n < len; n++){
+				if (n != this.Fixtures[n].Position-1){
+					this.Fixtures.move(n,this.Fixtures[n].Position-1);
+				}else{
+					cntGood += 1;
+				}
+			}
+		}
+	}
+	// Rearrange Sub-Accessory
+	if (this.Accessories.length > 0){
+		var cntGood = 0;
+		while (cntGood < this.Accessories.length){
+			cntGood = 0;
+			for (var len = this.Accessories.length, n = 0; n < len; n++){
+				if (n != this.Accessories[n].Position-1){
+					this.Accessories.move(n,this.Accessories[n].Position-1);
+				}else{
+					cntGood += 1;
+				}
+			}
+		}
+	}
 }
 
 function ZollerMeasuringDeviceV2(id) {
-  if (id == undefined) {
-    this.MeasuringDeviceId = "";
-    this.Description = "";
+	this.isNull = false;
+	this.MeasuringDeviceId = "";
+	this.Description = "";
+  this.Images = [];
+  this.Accessories = [];
+  this.Documents = [];
+	this.CustomProperties = {};
+	if (id == undefined) {
     this.GetZollerData = function (id) {
       return new ZollerMeasuringDeviceV2(id);
     }
@@ -1120,14 +1234,7 @@ function ZollerMeasuringDeviceV2(id) {
 
   this.XML;
   this.SetXML = function (xml) {
-    this.XML = xml;
-    if (xml.firstChild != null && xml.firstChild.hasAttribute != null) {
-      if (xml.firstChild.hasAttribute("result")) {
-        if (xml.firstChild.getAttribute("result") == "fail") {
-          console.log("Invalid response from TMS!");
-        }
-      }
-    }
+		this.XML = xml;
   }
 
   this.GetJSON = function () {
@@ -1176,7 +1283,7 @@ function ZollerMeasuringDeviceV2(id) {
     }
     measCol2.appendChild(measNotes);
 
-		if (_AllowEdit && this.CanDelete) { // Determines if the page allows the 'delete' functions to be added.
+		if (ZollerGlobal.Graphics.AllowEdit && this.CanDelete) { // Determines if the page allows the 'delete' functions to be added.
 			var delName = document.createElement("a");
 			delName.setAttribute("class", "delete");
 			measCol1.appendChild(delName);
@@ -1205,10 +1312,10 @@ function ZollerMeasuringDeviceV2(id) {
         } else {
           parent.appendChild(meas);
         }
-        setHandlers();
+        ZollerGlobal.Set.Handlers();
       } else {
         parent.appendChild(meas);
-        setHandlers();
+        ZollerGlobal.Set.Handlers();
       }
     }
     return meas;
@@ -1216,14 +1323,14 @@ function ZollerMeasuringDeviceV2(id) {
 
   var nodeMeasuringDevice;
   if ((typeof id) == "string") {
-    this.XML = _WebRequest("GET", "MeasuringDeviceV2/" + id + "?LoadSubData=true", this.SetXML);
+    this.XML = ZollerGlobal.Request.FromProxy("GET", "MeasuringDeviceV2/" + id + "?LoadSubData=true", this.SetXML);
   } else if ((typeof id) == "object") {
     this.SetXML(id);
   } else {
     console.log("Invalid object type!");
-    return;
   }
   nodeMeasuringDevice = getNodeByTagName(this.XML, "MeasuringDeviceV2");
+	if (nodeMeasuringDevice == undefined){this.isNull = true;return undefined;}
 
   this.MeasuringDeviceId = getValue(nodeMeasuringDevice, "MeasuringDeviceId");
 
@@ -1245,16 +1352,15 @@ function ZollerMeasuringDeviceV2(id) {
   this.MainTestValueLowerTol = getValue(nodeMeasuringDevice, "MainTestValueLowerTol");
   this.MeasuringPrecision = getValue(nodeMeasuringDevice, "MeasuringPrecision");
   this.InvFullCopy = getValue(nodeMeasuringDevice, "InvFullCopy");
-  this.Images = [];
-  this.Accessories = [];
-  this.Documents = [];
-
+  
+	this.Notes = ""; // Custom property
+	
   // Iterate through each main node to find pertinent data for the current object. This is done to avoid getting data from SubData nodes
   for (var len = nodeMeasuringDevice.children.length, n = 0; n < len; n++) {
     // Iterate through the main nodes first as there are more nodes than suffixes
-    for (var clen = graphicSuffixes.length, i = 0; i < clen; i++) {
+    for (var clen = ZollerGlobal.Graphics.Suffixes.length, i = 0; i < clen; i++) {
       // Iterate through the possible suffixes to see if the current node matches
-      if (nodeMeasuringDevice.children[n].tagName == "GraphicFile" + graphicSuffixes[i]) {
+      if (nodeMeasuringDevice.children[n].tagName == "GraphicFile" + ZollerGlobal.Graphics.Suffixes[i]) {
         this.Images.push(new ZollerGraphicImage(nodeMeasuringDevice.children[n].innerHTML, nodeMeasuringDevice.children[n + 1].innerHTML));
       }
     }
@@ -1284,8 +1390,10 @@ function ZollerMeasuringDeviceV2(id) {
 }
 
 function ZollerStorage(id) {
+	this.isNull = false;
+	this.StorageId = "";
+	this.CustomProperties = {};
   if (id == undefined) {
-    this.StorageId = "";
     this.GetZollerData = function (id) {
       return new ZollerStorage(id);
     }
@@ -1293,26 +1401,19 @@ function ZollerStorage(id) {
 
   this.XML;
   this.SetXML = function (xml) {
-    this.XML = xml;
-    if (xml.firstChild != null && xml.firstChild.hasAttribute != null) {
-      if (xml.firstChild.hasAttribute("result")) {
-        if (xml.firstChild.getAttribute("result") == "fail") {
-          console.log("Invalid response from TMS!");
-        }
-      }
-    }
+		this.XML = xml;
   }
 
   var nodeStorage;
   if ((typeof id) == "string") {
-    this.XML = _WebRequest("GET", "Storage/" + id + "?LoadSubData=true", this.SetXML);
+    this.XML = ZollerGlobal.Request.FromProxy("GET", "Storage/" + id + "?LoadSubData=true", this.SetXML);
   } else if ((typeof id) == "object") {
     this.SetXML(id);
   } else {
     console.log("Invalid object type!");
-    return;
   }
   nodeStorage = getNodeByTagName(this.XML, "Storage");
+	if (nodeStorage == undefined){this.isNull = true;return undefined;}
 
   this.StorageId = getValue(nodeStorage, "StorageId");
 
@@ -1333,6 +1434,109 @@ function ZollerStorage(id) {
   }
 }
 
+function ZollerDocument(id){
+	this.isNull = false;
+	this.DocumentId = "";
+	this.CreationTime = "";
+	this.LastModified = "";
+	this.Size = "";
+	this.MimeType = "";
+	this.Location = "";
+	this.CustomProperties = {};
+  if (id == undefined) {
+    this.GetZollerData = function (id) {
+      return new ZollerDocument(id);
+    }
+  }
+
+  this.XML;
+  this.SetXML = function (xml) {
+		this.XML = xml;
+  }
+
+  var nodeDocument;
+  if ((typeof id) == "object"){
+		this.SetXML(id);
+  } else {
+    console.log("Invalid object type!");
+  }
+  nodeDocument = getNodeByTagName(this.XML, "Document");
+	if (nodeDocument == undefined){this.isNull = true;return undefined;}
+
+  this.DocumentId = getValue(nodeDocument, "Document.DocumentId");
+
+	this.IsTrueZoller = true;
+	
+  this.CreationTime = getValue(nodeDocument, "Document.CreationTime");
+  this.LastModified = getValue(nodeDocument, "Document.LastModified");
+  this.DocumentSize = getValue(nodeDocument, "Document.Size");
+  this.DocumentMimeType = getValue(nodeDocument, "Document.MimeType");
+  this.DocumentLocation = getValue(nodeDocument, "Document.Location");
+	
+	// Allow code to dynamically add JavaScript to page
+	if (this.DocumentMimeType == "application/javascript"){
+		// First double check that the script hasn't already been added
+		this.AddScript = function(){
+			var ss = document.querySelectorAll("script[src='" + this.DocumentLocation + "']");
+			var blnGood = true;
+			if(ss.length > 0){
+				blnGood = false;
+			}
+			if (blnGood){
+				var s = document.createElement("script");
+				s.src = this.DocumentLocation;
+				s.type = this.DocumentMimeType;
+				document.querySelector("head").appendChild(s);
+				if (_Verbose){ console.log("Added new script!",this)}
+			}else if(_Verbose){
+				console.log("Script already exists!", this);
+			}
+		}
+	}else if (this.DocumentMimeType == "text/xml"){
+		this.ReferenceXML = ZollerGlobal.Request.FromProxy("GET", "Document/" + this.DocumentId, function(xml){this.ReferenceXML = xml});
+		this.AddDataBlock = function(){
+			var ss = document.querySelectorAll("script[data-documentid='" + this.DocumentId + "'][type='application/xml']");
+			var blnGood = true;
+			if(ss.length > 0){
+				blnGood = false;
+			}
+			if (blnGood){
+				var s = document.createElement("script");
+				s.type = "application/xml";
+				s.setAttribute("data-documentid",this.DocumentId);
+				ZollerGlobal.Request.FromProxy("GET", "Document/" + this.DocumentId, function(xml){
+					s.innerHTML = xml;
+					if (_Verbose){ console.log("Added new script!",this)}
+				});
+				document.querySelector("head").appendChild(s);
+			}else if(_Verbose){
+				console.log("Script already exists!", this);
+			}
+		}
+	}
+}
+
+function ZollerSubDocument(xml) {
+  this.XML = xml;
+  var nodeDocument = this.XML;
+
+  this.URI = getValue(nodeDocument, "DocumentUri");
+}
+function ZollerSubFixture(){
+	this.Position = -1;
+	this.Quantity = 0;
+	this.Fixture;
+}
+function ZollerSubMeasuringDeviceV2(){
+	this.Position = -1;
+	this.Quantity = 0;
+	this.MeasuringDeviceV2;
+}
+function ZollerSubAccessory(){
+	this.Position = -1;
+	this.Quantity = 0;
+	this.Accessory;
+}
 // **************************************************************************
 // **********************Zoller Characteristics Objects**********************
 //
@@ -1342,12 +1546,6 @@ function ZollerStorage(id) {
 //     should be added to the _ZollerACs array. 
 //
 // **************************************************************************
-
-var _ZollerACs = [];
-// __tdm is a custom JSON object that represents a custom Article Characteristic Bar. The JSON helps define the appropriate labels for each identifier.
-if (typeof __tdm !== "undefined") {
-  _ZollerACs.push(new ZollerArticleCharacteristicBar(__tdm));
-}
 
 function ZollerArticleCharacteristicBar(json) {
   this.ID = "";
@@ -1440,13 +1638,6 @@ function GetACSystemById(identifier) {
 //
 // **************************************************************************
 
-function ZollerDocument(xml) {
-  this.XML = xml;
-  var nodeDocument = this.XML;
-
-  this.URI = getValue(nodeDocument, "DocumentUri");
-}
-
 function ZollerCharacteristicStructure(xml) {
   this.Type = xml.getAttribute("Id");
   this.System = xml.getAttribute("System");
@@ -1464,6 +1655,28 @@ function ZollerCharacteristicItem(xml, systemId, typeId) {
   this.Label = GetACCharacteristicLabelById(systemId, typeId, this.Id);
   this.Value = xml.innerHTML;
   this.ArticleCharacteristic = GetACCharacteristicById(systemId, typeId, this.Id);
+	this.Units = "mm";
+	if (!isNaN(this.Value)){
+		this.Convert = function(newUnits){
+			if (newUnits == undefined){
+				if (this.Units == "mm"){
+					newUnits = "inches"
+				}else if (this.Units == "inches"){
+					newUnits = "mm";
+				}
+			}
+			if (newUnits == "mm"){
+				this.Value = Convert.InchesToMM(this.Value);
+				this.Units = "mm";
+			}else if(newUnits == "inches"){
+				this.Value = Convert.MMToInches(this.Value);
+				this.Units = "inches";
+			}else{
+				if (_Verbose){console.log("Indeterminable Units for ZollerCharacteristicItem",this)}
+			}
+			return this.Value;
+		}
+	}
 }
 
 
@@ -1479,15 +1692,15 @@ function ZollerCharacteristicItem(xml, systemId, typeId) {
 // **************************************************************************
 
 function ZollerGraphicImage(file, group) {
-  this.FileName = file;
+  this.FileName = encodeURI(file);
   this.GraphicGroup = group;
-  var img = new Image(_imageMediumPreviewSize.width, _imageMediumPreviewSize.height);
+  var img = new Image(ZollerGlobal.Graphics.PreviewSize.Medium.width, ZollerGlobal.Graphics.PreviewSize.Medium.height);
   if (this.FileName != undefined && this.GraphicGroup != undefined) {
     if (this.FileName.endsWith(".dxf") || this.FileName.endsWith(".stp")) {
-      this.ImageURL = _WebServiceBaseURL + "Graphic/" + this.GraphicGroup + "/" + this.FileName + "?w=800&h=600";
-      img.src = _WebServiceBaseURL + "Graphic/" + this.GraphicGroup + "/" + this.FileName + "?w=" + _imageMediumPreviewSize.width + "&h=" + _imageMediumPreviewSize.height;
+      this.ImageURL = ZollerGlobal.WebServiceBaseURL + "Graphic/" + this.GraphicGroup + "/" + this.FileName + "?w=800&h=600";
+      img.src = ZollerGlobal.WebServiceBaseURL + "Graphic/" + this.GraphicGroup + "/" + this.FileName + "?w=" + ZollerGlobal.Graphics.PreviewSize.Medium.width + "&h=" + ZollerGlobal.Graphics.PreviewSize.Medium.height;
     } else {
-      this.ImageURL = _WebServiceBaseURL + "Graphic/" + this.GraphicGroup + "/" + this.FileName;
+      this.ImageURL = ZollerGlobal.WebServiceBaseURL + "Graphic/" + this.GraphicGroup + "/" + this.FileName;
       img.src = this.ImageURL;
     }
   }
@@ -1495,7 +1708,7 @@ function ZollerGraphicImage(file, group) {
   this.Image = img;
   this.GetCustomImageURL = function (width, height) {
     if (this.GraphicGroup != undefined && this.FileName != undefined && typeof this.GraphicGroup != "undefined" && typeof this.FileName != "undefined") {
-      return _WebServiceBaseURL + "Graphic/" + this.GraphicGroup + "/" + this.FileName + "?w=" + width + "&h=" + height;
+      return ZollerGlobal.WebServiceBaseURL + "Graphic/" + this.GraphicGroup + "/" + this.FileName + "?w=" + width + "&h=" + height;
     } else {
       return ""
     }
@@ -1511,7 +1724,9 @@ function ZollerGraphicImage(file, group) {
 //     objects above. 
 //
 // **************************************************************************
-
+function getAttribute(node, name){
+	return node.attributes[name].value;
+}
 function getValue(xml, name) {
   var rtn = getNodes(xml, name);
   if (rtn.length > 0) {
@@ -1523,19 +1738,21 @@ function getValue(xml, name) {
 function getNodes(xml, name) {
   var arr = [];
   if (xml != undefined) {
-    for (var len = xml.childNodes.length, n = 0; n < len; n++) {
-      if (xml.childNodes[n].tagName == name) {
-        arr.push(xml.childNodes[n]);
-      } else if (xml.childNodes[n].childNodes.length > 0) {
-        var tmpArr = [];
-        tmpArr = getNodes(xml.childNodes[n], name);
-        if (tmpArr.length > 0) {
-          for (m = 0; m < tmpArr.length; m++) {
-            arr.push(tmpArr[m]);
-          }
-        }
-      }
-    }
+		if (xml.childNodes != undefined){
+			for (var len = xml.childNodes.length, n = 0; n < len; n++) {
+				if (xml.childNodes[n].tagName == name) {
+					arr.push(xml.childNodes[n]);
+				} else if (xml.childNodes[n].childNodes.length > 0) {
+					var tmpArr = [];
+					tmpArr = getNodes(xml.childNodes[n], name);
+					if (tmpArr.length > 0) {
+						for (m = 0; m < tmpArr.length; m++) {
+							arr.push(tmpArr[m]);
+						}
+					}
+				}
+			}
+		}
   }
   return arr;
 }
@@ -1552,11 +1769,13 @@ function getNodeByInnerText(xml, name, search) {
   return undefined;
 }
 function getNodeByTagName(xml, name) {
-  if (typeof xml.tagName !== "undefined") {
+  if (xml != undefined) {
     if (xml.tagName == name) {
       return xml;
     }
-  }
+  }else{
+		return undefined
+	}
   for (var len = xml.childNodes.length, n = 0; n < len; n++) {
     if (xml.childNodes[n].tagName == name) {
       return xml.childNodes[n];
@@ -1568,81 +1787,109 @@ function getNodeByTagName(xml, name) {
   return undefined;
 }
 
-function convertToPlain(rtf) {
-  if (rtf != undefined) {
-    rtf = rtf.replace(/\\par[d]?/g, "");
-    return rtf.replace(/\{\*?\\[^{}]+}|[{}]|\\\n?[A-Za-z]+\n?(?:-?\d+)?[ ]?/g, "").trim();
-  } else {
-    return "";
-  }
+Convert = {
+	RTFToPlainText: function(rtf){
+		if (rtf != undefined) {
+			rtf = rtf.replace(/\\par[d]?/g, "");
+			return rtf.replace(/\{\*?\\[^{}]+}|[{}]|\\\n?[A-Za-z]+\n?(?:-?\d+)?[ ]?/g, "").trim();
+		} else {
+			return "";
+		}
+	},
+	PlainToRTF: function(plain){
+		if (plain != undefined) {
+			plain = plain.replace(/\n/g, "\\par\n");
+			return "{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang2057{\\fonttbl{\\f0\\fnil\\fcharset0 Microsoft Sans Serif;}}\n\\viewkind4\\uc1\\pard\\f0\\fs17 " + plain + "\\par\n}";
+		} else {
+			return "";
+		}
+	},
+	MMToInches: function(input){
+		if (!isNaN(input)){
+			input = input / 25.4
+		}
+		return input
+	},
+	InchesToMM: function(input){
+		if (!isNaN(input)){
+			input = input * 25.4
+		}
+		return input
+	}
 }
-function convertToRtf(plain) {
-  if (plain != undefined) {
-    plain = plain.replace(/\n/g, "\\par\n");
-    return "{\\rtf1\\ansi\\ansicpg1252\\deff0\\deflang2057{\\fonttbl{\\f0\\fnil\\fcharset0 Microsoft Sans Serif;}}\n\\viewkind4\\uc1\\pard\\f0\\fs17 " + plain + "\\par\n}";
-  } else {
-    return "";
-  }
+
+Array.prototype.move = function(from, to){
+	this.splice(to, 0, this.splice(from, 1)[0]);
+};
+
+
+var _ZollerACs = [];
+// __tdm is a custom JSON object that represents a custom Article Characteristic Bar. The JSON helps define the appropriate labels for each identifier.
+if (typeof __tdm !== "undefined") {
+  _ZollerACs.push(new ZollerArticleCharacteristicBar(__tdm));
 }
 
-// **************************************************************************
-// *******************************Web Request*******************************
-//
-// Notes:
-//     The _WebRequest function depends on a proxy to successfully 
-//     communicate with the Zoller Web Service to avoid the Cross-Origin 
-//     Request Blocked error. For the most part, only the global variables 
-//     should be changed if you are using a similar Web Method. Otherwise, 
-//     you may need to change the parameters sent in the xhr.send() 
-//     method.
-//     
-//     _RequestBaseURL:
-//     Defines the URI for the proxy service that can send an authenticated 
-//     request to the Zoller Web Service.
-//     _WebServiceBaseURL:
-//     Defines the URI for the Zoller Web Service. Typically 
-//     http://[servername]:80/ZollerDbService/
-//
-// **************************************************************************
+function ZollerServiceInstance(){
+	this.isNull = false;
 
-var _XMLDeclaration = "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>";
-
-var _RequestBaseURL = "http://server:8086/UpdateSetupSheet.asmx/SetZoller";
-var _WebServiceBaseURL = "http://server:8084/ZollerDbService/";
-function _WebRequest(method, query, callback, data, async) {
-  var xhr = new XMLHttpRequest();
-  if (async == undefined) { async = false; }
-  xhr.open("POST", _RequestBaseURL, async);
-
-  xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-
-  xhr.onprogress = function (e) {
-    var done = e.position || e.loaded, total = e.totalSize || e.total;
-    console.log("XHR Progress: " + (Math.floor(done / total * 1000) / 10) + '%');
-  }
-  if (xhr.upload) {
-    xhr.upload.onprogress = function (e) {
-      var done = e.position || e.loaded, total = e.totalSize || e.total;
-      console.log("XHR Upload Progress: " + (Math.floor(done / total * 1000) / 10) + '%');
-    }
-  }
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState == 4) {// && xhr.status == 200){
-      if (xhr.status == 200) {
-        if (callback != undefined && callback != null) {
-          callback(xhr.responseXML);
-        }
-      }
-    }
-  }
-  if (data === null) {
-    xhr.send("url=" + encodeURIComponent(_WebServiceBaseURL + query) + "&method=" + method + "&data=");
-  } else {
-    xhr.send("url=" + encodeURIComponent(_WebServiceBaseURL + query) + "&method=" + method + "&data=" + encodeURIComponent(data));
+  this.XML;
+  this.SetXML = function (xml) {
+		this.XML = xml;
   }
 
-  return xhr.responseXML;
+  var nodeInstance;
+	this.XML = ZollerGlobal.Request.FromProxy("GET", "service-instance/", this.SetXML);
+  nodeInstance = getNodeByTagName(this.XML, "service-instance");
+	if (nodeInstance == undefined){this.isNull = true;return undefined;}
+
+	this.IsTrueZoller = true;
+	
+	this.WebServiceVersion = getAttribute(getNodeByTagName(this.XML, "service-instance"), "version");
+	this.HostName = getAttribute(getNodeByTagName(this.XML, "service-instance"), "machine");
+	this.Port = getAttribute(getNodeByTagName(this.XML, "service-instance"), "port");
+	this.WebInterfaceVersion = getValue(getNodeByTagName(this.XML, "version"), "Interface");
+	this.ZollerVersion = getValue(getNodeByTagName(this.XML, "version"), "System");
+	this.DocumentsPath = getValue(getNodeByTagName(this.XML, "properties"), "DocumentRoot");
+	this.GraphicsPath = getValue(getNodeByTagName(this.XML, "properties"), "GraphicRoot");
+	this.AuthorizationType = getValue(getNodeByTagName(this.XML, "properties"), "AuthorizationType");
+	this.AuthorizationRequired = (getValue(getNodeByTagName(this.XML, "properties"), "AuthorizationAllwaysRequired") == "true");
+	this.DatabaseType = getValue(getNodeByTagName(this.XML, "database"), "DbSystem");
+	this.DatabaseName = getValue(getNodeByTagName(this.XML, "database"), "Database");
+	this.DatabaseVersion = getValue(getNodeByTagName(this.XML, "database"), "DbVersion");
+	this.CharacteristicStructureNames = [];
+	var cs = getNodes(getNodeByTagName(this.XML, "database"), "CharacteristicStructure");
+	for (var len = cs.length, n = 0; n < len; n++){
+		this.CharacteristicStructureNames.push({"Name":cs[n].innerHTML,"Type":getAttribute(cs[n],"type"),"Version":getAttribute(cs[n],"version"),"XML":cs[n]});
+	}
 }
+
+function ZollerDocumentList(){
+	this.isNull = false;
+
+  this.XML;
+  this.SetXML = function (xml) {
+		this.XML = xml;
+  }
+
+  var nodeDocumentList;
+	this.XML = ZollerGlobal.Request.FromProxy("GET", "Document", this.SetXML);
+  nodeDocumentList = getNodeByTagName(this.XML, "BrowseResult");
+	if (nodeDocumentList == undefined){this.isNull = true;return undefined;}
+
+	this.IsTrueZoller = true;
+	
+	this.Documents = [];
+	
+	var docs = getNodes(this.XML,"Document");
+	if (docs != undefined){
+		if (docs.length > 0){
+			for (var len = docs.length, n = 0; n < len; n++){
+				this.Documents.push(new ZollerDocument(docs[n]));
+			}
+		}
+	}
+}
+
 
 // **************************************************************************
 // ********************************UI Events********************************
@@ -1652,188 +1899,6 @@ function _WebRequest(method, query, callback, data, async) {
 //     such as drag and drop, adding/deleting, etc. 
 //
 // **************************************************************************
-
-function RaiseAccessoryDeleteEvent(Accessory) {
-  var evt = document.createEvent("Events");
-  evt.initEvent("accessorydelete", true, true);
-  evt.AccessoryId = Accessory;
-  document.dispatchEvent(evt);
-}
-function RaiseMeasureDeleteEvent(Measuring) {
-  var evt = document.createEvent("Events");
-  evt.initEvent("measuredelete", true, true);
-  evt.MeasuringDeviceId = Measuring;
-  document.dispatchEvent(evt);
-}
-function RaiseFixtureDeleteEvent(Fixture) {
-  var evt = document.createEvent("Events");
-  evt.initEvent("fixturedelete", true, true);
-  evt.FixtureId = Fixture;
-  document.dispatchEvent(evt);
-}
-function RaiseToolDeleteEvent(Tool) {
-  var evt = document.createEvent("Events");
-  evt.initEvent("tooldelete", true, true);
-  evt.ToolId = Tool;
-  document.dispatchEvent(evt);
-}
-function RaiseComponentDeleteEvent(Component, Tool) {
-  var evt = document.createEvent("Events");
-  evt.initEvent("componentdelete", true, true);
-  evt.ComponentId = Component;
-  evt.ToolId = Tool;
-  document.dispatchEvent(evt);
-}
-function RaiseComponentAddEvent(Tool) {
-  var evt = document.createEvent("Events");
-  evt.initEvent("componentadd", true, true);
-  evt.ToolId = Tool;
-  document.dispatchEvent(evt);
-}
-function RaiseToolEditEvent(Tool) {
-  var evt = document.createEvent("Events");
-  evt.initEvent("tooledit", true, true);
-  evt.ToolId = Tool;
-  document.dispatchEvent(evt);
-}
-function RaiseComponentSelectedEvent(Component, Tool) {
-  var evt = document.createEvent("Events");
-  evt.initEvent("componentselected", true, true);
-  evt.ToolId = Tool;
-  evt.ComponentId = Component;
-  document.dispatchEvent(evt);
-}
-function RaiseToolSelectedEvent(Tool) {
-  var evt = document.createEvent("Events");
-  evt.initEvent("toolselected", true, true);
-  evt.ToolId = Tool;
-  document.dispatchEvent(evt);
-}
-function RaiseFixtureSelectedEvent(Fixture) {
-  var evt = document.createEvent("Events");
-  evt.initEvent("fixtureselected", true, true);
-  evt.FixtureId = Fixture;
-  document.dispatchEvent(evt);
-}
-function RaiseAccessorySelectedEvent(Accessory) {
-  var evt = document.createEvent("Events");
-  evt.initEvent("accessoryselected", true, true);
-  evt.AccessoryId = Accessory;
-  document.dispatchEvent(evt);
-}
-function RaiseMeasuringSelectedEvent(Measure) {
-  var evt = document.createEvent("Events");
-  evt.initEvent("measureselected", true, true);
-  evt.MeasuringDeviceId = Measure;
-  document.dispatchEvent(evt);
-}
-
-var dragSrcEl = null;
-function handleDragStart(e) {
-  this.style.opacity = "0.4";  // this / e.target is the source node.
-
-  dragSrcEl = this;
-  console.log("DragSource: ", dragSrcEl);
-
-  e.dataTransfer.effectAllowed = "move";
-  e.dataTransfer.setData("text/html", this.outerHTML);
-}
-function handleDragOver(e) {
-  if (e.preventDefault) {
-    e.preventDefault(); // Necessary. Allows us to drop.
-  }
-  if (dragSrcEl.dataset.tool == this.dataset.tool) {
-    e.dataTransfer.dropEffect = "move";  // See the section on the DataTransfer object.
-    if (handleDragOver.lastElement == undefined) {
-      handleDragOver.lastElement = this;
-      handleDragOver.lastElement.classList.add("over");
-    } else {
-      handleDragOver.lastElement.classList.remove("over");
-      handleDragOver.lastElement = this;
-      handleDragOver.lastElement.classList.add("over");
-    }
-  } else {
-    e.dataTransfer.dropEffect = "none";
-  }
-
-  return false;
-}
-function handleDragEnter(e) {
-  // this / e.target is the current hover target.
-  console.log("Drag Entered: ", this);
-}
-function handleDragLeave(e) {
-  //this.classList.remove("over");  // this / e.target is previous target element.
-}
-function handleDrop(e) {
-  if (e.preventDefault) { e.preventDefault(); }
-  if (e.stopPropagation) { e.stopPropagation(); }
-
-  // Don't do anything if dropping the same column we're dragging.
-  if (dragSrcEl != this) {
-    // Set the source column's HTML to the HTML of the column we dropped on.
-    console.log("Source: ", dragSrcEl);
-    console.log("Target: ", this);
-    dragSrcEl.outerHTML = this.outerHTML;
-    this.outerHTML = e.dataTransfer.getData('text/html');
-    setHandlers();
-  }
-
-  return false;
-}
-function handleDragEnd(e) {
-  // this/e.target is the source node.
-  var cols = document.querySelectorAll('.assembly-item');
-  [].forEach.call(cols, function (col) {
-    col.classList.remove('over');
-    col.style.opacity = "1";
-  });
-}
-
-function toggleEdit(state) {
-  var els = document.querySelectorAll(".delete");
-  [].forEach.call(els, function (el) {
-    el.classList.toggle("noEdit", !state);
-  });
-  els = document.querySelectorAll(".add-component");
-  [].forEach.call(els, function (el) {
-    el.classList.toggle("noEdit", !state);
-  });
-}
-function deleteComponent(e) {
-  RaiseComponentDeleteEvent(e.target.parentElement.dataset.component, e.target.parentElement.dataset.tool);
-	e.stopImmediatePropagation();
-  e.preventDefault();
-}
-function deleteTool(e) {
-  RaiseToolDeleteEvent(e.target.parentElement.dataset.tool);
-	e.stopImmediatePropagation();
-  e.preventDefault();
-}
-function deleteFixture(e) {
-  RaiseFixtureDeleteEvent(e.target.parentElement.parentElement.dataset.fixture);
-	e.stopImmediatePropagation();
-  e.preventDefault();
-}
-function deleteMeasuring(e) {
-	RaiseMeasureDeleteEvent(e.target.parentElement.parentElement.dataset.measure);
-	e.stopImmediatePropagation();
-	e.preventDefault();
-}
-function deleteAccessory(e) {
-	RaiseAccessoryDeleteEvent(e.target.parentElement.parentElement.dataset.accessory);
-	e.stopImmediatePropagation();
-	e.preventDefault();
-}
-function selectedComponent(e) {
-  // Double check that another function wasn't intended
-  if (e.target.tagName == "A") { return false }
-  var d = e.target;
-  while (d.getAttribute("class") != "assembly-item") {
-    d = d.parentElement;
-  }
-  RaiseComponentSelectedEvent(d.dataset.component, d.dataset.tool)
-}
 
 function GetParentWithClass(name,el,limit){
 	var cur = el;
@@ -1846,172 +1911,544 @@ function GetParentWithClass(name,el,limit){
 		cur = cur.parentElement;
 	}
 }
-function setHandlers() {
-	// Main Node click
-	setHandler(".assembly-name", "click", function (e) {
-		if (e.target.getAttribute("class") === null || e.target.getAttribute("class").indexOf("assembly-name") > -1) {
-			e.target.classList.toggle("clicked");
-			RaiseToolSelectedEvent(e.target.dataset.tool);
-			e.stopImmediatePropagation();
-			e.preventDefault();
-		}
-	});
-	setHandler(".fixture-name", "click", function (e) {
-		var el = GetParentWithClass("fixture-name",e.target,3);
-		if (el.getAttribute("class") === null || el.getAttribute("class").indexOf("fixture-name") > -1) {
-			RaiseFixtureSelectedEvent(el.parentElement.dataset.fixture);
-			e.stopImmediatePropagation();
-			e.preventDefault();
-		}
-	});
-	setHandler(".measure-name", "click", function (e) {
-		var el = GetParentWithClass("measure-name",e.target,3);
-		if (el.getAttribute("class") === null || el.getAttribute("class").indexOf("measure-name") > -1) {
-			RaiseMeasuringSelectedEvent(el.parentElement.dataset.measure);
-			e.stopImmediatePropagation();
-			e.preventDefault();
-		}
-	});
-	setHandler(".accessory-name", "click", function (e) {
-		var el = GetParentWithClass("accessory-name",e.target,3);
-		if (el.getAttribute("class") === null || el.getAttribute("class").indexOf("accessory-name") > -1) {
-			RaiseAccessorySelectedEvent(el.parentElement.dataset.accessory);
-			e.stopImmediatePropagation();
-			e.preventDefault();
-		}
-	});
-	
-	// Drag events
-	setHandler(".assembly-item", "dragstart", handleDragStart);
-	setHandler(".assembly-item", "dragenter", handleDragEnter);
-	setHandler(".assembly-item", "dragover", handleDragOver);
-	setHandler(".assembly-item", "dragleave", handleDragLeave);
-	setHandler(".assembly-item", "drop", handleDrop);
-	setHandler(".assembly-item", "dragend", handleDragEnd);
-	setHandler(".assembly-item", "click", selectedComponent);
-  setHandler(".assembly-item > .delete", "click", deleteComponent);
-  setHandler(".assembly-name > .delete", "click", deleteTool);
-  
-	// Delete events
-	setHandler(".fixture-name > .delete", "click", deleteFixture);
-  setHandler(".measure-name > .delete", "click", deleteMeasuring);
-	setHandler(".accessory-name > .delete", "click", deleteAccessory);
-	
-	// Add component
-  setHandler(".add-component","click",function (e) {
-		RaiseComponentAddEvent(e.target.parentElement.dataset.tool)
-		e.stopImmediatePropagation();
-		e.preventDefault();
-	});
-  
-	// Flip button events
-  setHandler(".assembly-name > .accessorycount > .flip-item", "click", function (e) {
-		var blnGood = false;
-		if (e.target.getAttribute("class") === null || e.target.getAttribute("class").indexOf("flip-item") > -1){
-			blnGood = true;
-		}
-		if (blnGood){
-			var parTool = e.target.parentElement.parentElement.parentElement;
-			var subAccDiv = parTool.querySelector(".accessory-sub");
-			var closing = subAccDiv.classList.contains("show");
-			subAccDiv.classList.toggle("show");
-			var count = subAccDiv.querySelectorAll(".fixture").length;
-			if (parTool.style.getPropertyValue("height") != "" && parTool.querySelector(".show") == null) {
-				parTool.style.removeProperty("height");
-			} else {
-				//parFixt.style.height = "auto";
-				if (closing) {
-					parTool.style.height = "calc(" + (parTool.clientHeight * count) + "px - var(--sizeHeight))";
-				} else {
-					parTool.style.height = "calc(var(--sizeHeight) + " + (parTool.clientHeight * count) + "px)";
+
+
+ZollerGlobal = {
+	Graphics: {
+		Suffixes: ["", "1", "2", "3", "4", "5", "6", "7", "8"],
+		PreviewSize: {
+			Large: {width: 150, height: 150},
+			Medium: {width: 75, height: 75},
+			Small: {width: 75, height: 75}
+		},
+		Sizes: ["sm", "md", "lg"],
+		DefaultSize: "md",
+		AllowEdit: false
+	},
+	XMLDeclaration: "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>",
+	RequestBaseURL: "http://server:8086/UpdateSetupSheet.asmx/SetZoller",
+	WebServiceBaseURL: "http://server:8084/ZollerDbService/",
+	ServiceInstance: null,
+	DocumentList: null,
+	UserName: "zoller",
+	UserPassword: "zoller",
+	Request: {
+		CreateAuthorization: function(method, query){
+			var dat = (new Date()).getRFC2616();
+			var auth = "ZWS ";
+			var accId = btoa(ZollerGlobal.UserName);
+			var req = query;
+			if (req.indexOf("?") >= 0){req = req.substring(0, req.indexOf("?"))}
+			if (req.lastIndexOf("/") == (req.length-1)){req = req.substring(0, req.lastIndexOf("/")-1)}
+			var str2Sign = method + "\n" + dat + "\n" + req;
+			var sign = b64_hmac_sha1(ZollerGlobal.UserPassword, str2Sign);
+			auth += accId + ":" + sign;
+			return {
+					AccessId: accId,
+					Signiture: {
+						UserPassword: ZollerGlobal.UserPassword,
+						String2Sign: {
+							Method: method,
+							DateTime: dat,
+							Resource: req,
+							ToString: function(){
+								return str2Sign;
+							}
+						},
+						ToString: function(){
+							return sign;
+						}
+					},
+					ToString: function(){
+						return auth;
+					}
+			}
+		},
+		FromProxy: function(method, query, callback, data, async){
+			var xhr = new XMLHttpRequest();
+			if (async == undefined) { async = false; }
+			xhr.open("POST", ZollerGlobal.RequestBaseURL, async);
+
+			xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+			xhr.onprogress = function (e) {
+				var done = e.position || e.loaded, total = e.totalSize || e.total;
+				console.log("XHR Progress: " + (Math.floor(done / total * 1000) / 10) + '%');
+			}
+			if (xhr.upload) {
+				xhr.upload.onprogress = function (e) {
+					var done = e.position || e.loaded, total = e.totalSize || e.total;
+					console.log("XHR Upload Progress: " + (Math.floor(done / total * 1000) / 10) + '%');
 				}
 			}
-			e.target.classList.toggle("flipped");
-			e.stopImmediatePropagation();
-			e.preventDefault();
-		}
-	});
-  setHandler(".fixture-name > .childcount > .flip-item", "click", function (e) {
-		var blnGood = false;
-		if (e.target.getAttribute("class") === null || e.target.getAttribute("class").indexOf("flip-item") > -1){
-			blnGood = true;
-		}
-		if (blnGood){
-			var parFixt = e.target.parentElement.parentElement.parentElement;
-			var subFixtDiv = parFixt.querySelector(".fixture-sub");
-			var closing = subFixtDiv.classList.contains("show");
-			subFixtDiv.classList.toggle("show");
-			var count = subFixtDiv.querySelectorAll(".fixture").length;
-			if (parFixt.style.getPropertyValue("height") != "" && parFixt.querySelector(".show") == null) {
-				parFixt.style.removeProperty("height");
-			} else {
-				//parFixt.style.height = "auto";
-				if (closing) {
-					parFixt.style.height = "calc(" + (parFixt.clientHeight * count) + "px - var(--sizeHeight))";
-				} else {
-					parFixt.style.height = "calc(var(--sizeHeight) + " + (parFixt.clientHeight * count) + "px)";
+			xhr.onreadystatechange = function () {
+				if (xhr.readyState == 4) {// && xhr.status == 200){
+					if (xhr.status == 200) {
+						if (callback != undefined && callback != null) {
+							// New Code
+							if (xhr.responseXML.firstChild != null && xhr.responseXML.firstChild.hasAttribute != null) {
+								if (xhr.responseXML.firstChild.hasAttribute("result")) {
+									if (xhr.responseXML.firstChild.getAttribute("result") == "fail") {
+										console.log("Invalid response from TMS!");
+										callback(undefined);
+										return undefined;
+									}
+								}
+							}
+							callback(xhr.responseXML);
+						}
+					}
 				}
 			}
-			e.target.classList.toggle("flipped");
-			e.stopImmediatePropagation();
-			e.preventDefault();
-		}
-	});
-  setHandler(".fixture-name > .accessorycount > .flip-item", "click", function (e) {
-		var blnGood = false;
-		if (e.target.getAttribute("class") === null || e.target.getAttribute("class").indexOf("flip-item") > -1){
-			blnGood = true;
-		}
-		if (blnGood){
-			var parFixt = e.target.parentElement.parentElement.parentElement;
-			var subAccDiv = parFixt.querySelector(".accessory-sub");
-			var closing = subAccDiv.classList.contains("show");
-			subAccDiv.classList.toggle("show");
-			var count = subAccDiv.querySelectorAll(".accessory").length;
-			if (parFixt.style.getPropertyValue("height") != "" && parFixt.querySelector(".show") == null) {
-				parFixt.style.removeProperty("height");
+			if (data === null) {
+				xhr.send("url=" + encodeURIComponent(ZollerGlobal.WebServiceBaseURL + query) + "&method=" + method + "&data=");
 			} else {
-				//parFixt.style.height = "auto";
-				if (closing) {
-					parFixt.style.height = "calc(" + (parFixt.clientHeight * count) + "px - var(--sizeHeight))";
-				} else {
-					parFixt.style.height = "calc(var(--sizeHeight) + " + (parFixt.clientHeight * count) + "px + 15px)";
+				xhr.send("url=" + encodeURIComponent(ZollerGlobal.WebServiceBaseURL + query) + "&method=" + method + "&data=" + encodeURIComponent(data));
+			}
+
+			return xhr.responseXML;
+		},
+		FromService: function(method, query, callback, async){
+			console.log("[ZollerGlobal.Request.FromService] This is an experimental function and requires that the TMS Web Service allows CORS!");
+			var xhr = new XMLHttpRequest();
+			if (async == undefined) { async = false; }
+			xhr.open(method, ZollerGlobal.WebServiceBaseURL + query, async);
+
+			xhr.setRequestHeader("Content-Type", "text/xml");
+			var auth = ZollerGlobal.Request.CreateAuthorization(method,query);
+			xhr.setRequestHeader("Authorization", auth.ToString());
+			xhr.setRequestHeader("x-zws-date", auth.Signiture.String2Sign.DateTime);
+			var loc = ZollerGlobal.WebServiceBaseURL;//window.location.toString();
+			loc = loc.replace("http://","");
+			loc = loc.substring(0, loc.indexOf("/"));
+			xhr.setRequestHeader("Host", loc);
+			xhr.onprogress = function (e) {
+				var done = e.position || e.loaded, total = e.totalSize || e.total;
+				console.log("XHR Progress: " + (Math.floor(done / total * 1000) / 10) + '%');
+			}
+			if (xhr.upload) {
+				xhr.upload.onprogress = function (e) {
+					var done = e.position || e.loaded, total = e.totalSize || e.total;
+					console.log("XHR Upload Progress: " + (Math.floor(done / total * 1000) / 10) + '%');
 				}
 			}
-			e.target.classList.toggle("flipped");
-			e.stopImmediatePropagation();
-			e.preventDefault();
-		}
-	});
-  setHandler(".measure-name > .accessorycount > .flip-item", "click", function (e) {
-		var blnGood = false;
-		if (e.target.getAttribute("class") === null || e.target.getAttribute("class").indexOf("flip-item") > -1){
-			blnGood = true;
-		}
-		if (blnGood){
-			var parMeas = e.target.parentElement.parentElement.parentElement;
-			var subAccDiv = parMeas.querySelector(".accessory-sub");
-			var closing = subAccDiv.classList.contains("show");
-			subAccDiv.classList.toggle("show");
-			if (parMeas.style.getPropertyValue("height") != "" && parMeas.querySelector(".show") == null) {
-				parMeas.style.removeProperty("height");
-			} else {
-				//parFixt.style.height = "auto";
-				if (closing) {
-					parMeas.style.height = "calc(" + parMeas.clientHeight + "px - var(--sizeHeight))";
-				} else {
-					parMeas.style.height = "calc(var(--sizeHeight) + " + parMeas.clientHeight + "px + 15px)";
+			xhr.onreadystatechange = function () {
+				if (xhr.readyState == 4) {// && xhr.status == 200){
+					if (xhr.status == 200) {
+						if (callback != undefined && callback != null) {
+							// New Code
+							if (xhr.responseXML.firstChild != null && xhr.responseXML.firstChild.hasAttribute != null) {
+								if (xhr.responseXML.firstChild.hasAttribute("result")) {
+									if (xhr.responseXML.firstChild.getAttribute("result") == "fail") {
+										console.log("Invalid response from TMS!");
+										callback(undefined);
+										return undefined;
+									}
+								}
+							}
+							callback(xhr.responseXML);
+						}
+					}
 				}
 			}
-			e.target.classList.toggle("flipped");
-			e.stopImmediatePropagation();
-			e.preventDefault();
+			xhr.send();
+
+			return xhr.responseXML;
 		}
-	});
-}
-function setHandler(query,onevent,callback){
-	var cols = document.querySelectorAll(query);
-	for (var len = cols.length, n = 0; n < len; n++){
-		cols[n].addEventListener(onevent, callback, false);
+	},
+	Set: {
+		DragSourceElement: null,
+		Handlers: function(){
+			// Main Node click
+			ZollerGlobal.Set.Handler(".assembly-name", "click", function (e) {
+				var el = GetParentWithClass("assembly-name",e.target,3);
+				if (el.getAttribute("class") === null || el.getAttribute("class").indexOf("assembly-name") > -1) {
+					ZollerGlobal.Raise.Tool.Selected(e.target.dataset.tool, el);
+					e.stopImmediatePropagation();
+					e.preventDefault();
+				}
+			});
+			ZollerGlobal.Set.Handler(".fixture-name", "click", function (e) {
+				var el = GetParentWithClass("fixture-name",e.target,3);
+				if (el.getAttribute("class") === null || el.getAttribute("class").indexOf("fixture-name") > -1) {
+					ZollerGlobal.Raise.Fixture.Selected(el.parentElement.dataset.fixture, el);
+					e.stopImmediatePropagation();
+					e.preventDefault();
+				}
+			});	ZollerGlobal.Set.Handler("li.fixture", "click", function (e) {
+				var el = GetParentWithClass("fixture",e.target,3);
+				if (el.getAttribute("class") === null || el.getAttribute("class").indexOf("fixture") > -1) {
+					ZollerGlobal.Raise.Fixture.Selected(el.dataset.fixture, el);
+					e.stopImmediatePropagation();
+					e.preventDefault();
+				}
+			});
+			ZollerGlobal.Set.Handler(".measure-name", "click", function (e) {
+				var el = GetParentWithClass("measure-name",e.target,3);
+				if (el.getAttribute("class") === null || el.getAttribute("class").indexOf("measure-name") > -1) {
+					ZollerGlobal.Raise.MeasuringDeviceV2.Selected(el.parentElement.dataset.measure, el);
+					e.stopImmediatePropagation();
+					e.preventDefault();
+				}
+			});
+			ZollerGlobal.Set.Handler(".accessory-name", "click", function (e) {
+				var el = GetParentWithClass("accessory-name",e.target,3);
+				if (el.getAttribute("class") === null || el.getAttribute("class").indexOf("accessory-name") > -1) {
+					ZollerGlobal.Raise.Accessory.Selected(el.parentElement.dataset.accessory, el);
+					e.stopImmediatePropagation();
+					e.preventDefault();
+				}
+			});
+			ZollerGlobal.Set.Handler(".assembly-item", "click", function(e){
+				// Double check that another function wasn't intended
+				if (e.target.tagName == "A") { return false }
+				var d = e.target;
+				while (d.getAttribute("class") != "assembly-item") {
+					d = d.parentElement;
+				}
+				ZollerGlobal.Raise.Component.Selected(d.dataset.component, d.dataset.tool, e.target)
+			});
+			
+			// Drag events
+			ZollerGlobal.Set.Handler(".assembly-item", "dragstart", function(e){
+				this.style.opacity = "0.4";  // this / e.target is the source node.
+
+				ZollerGlobal.Set.DragSourceElement = this;
+				console.log("DragSource: ", ZollerGlobal.Set.DragSourceElement);
+
+				e.dataTransfer.effectAllowed = "move";
+				e.dataTransfer.setData("text/html", this.outerHTML);
+			});
+			ZollerGlobal.Set.Handler(".assembly-item", "dragenter", function(e){
+				// this / e.target is the current hover target.
+				console.log("Drag Entered: ", this);
+			});
+			ZollerGlobal.Set.Handler(".assembly-item", "dragover", function(e){
+				if (e.preventDefault) {
+					e.preventDefault(); // Necessary. Allows us to drop.
+				}
+				if (ZollerGlobal.Set.DragSourceElement.dataset.tool == this.dataset.tool) {
+					e.dataTransfer.dropEffect = "move";  // See the section on the DataTransfer object.
+					if (handleDragOver.lastElement == undefined) {
+						handleDragOver.lastElement = this;
+						handleDragOver.lastElement.classList.add("over");
+					} else {
+						handleDragOver.lastElement.classList.remove("over");
+						handleDragOver.lastElement = this;
+						handleDragOver.lastElement.classList.add("over");
+					}
+				} else {
+					e.dataTransfer.dropEffect = "none";
+				}
+
+				return false;
+			});
+			ZollerGlobal.Set.Handler(".assembly-item", "dragleave", function(e){
+				//this.classList.remove("over");  // this / e.target is previous target element.
+			});
+			ZollerGlobal.Set.Handler(".assembly-item", "drop", function(e){
+				if (e.preventDefault) { e.preventDefault(); }
+				if (e.stopPropagation) { e.stopPropagation(); }
+
+				// Don't do anything if dropping the same column we're dragging.
+				if (ZollerGlobal.Set.DragSourceElement != this) {
+					// Set the source column's HTML to the HTML of the column we dropped on.
+					console.log("Source: ", ZollerGlobal.Set.DragSourceElement);
+					console.log("Target: ", this);
+					ZollerGlobal.Set.DragSourceElement.outerHTML = this.outerHTML;
+					this.outerHTML = e.dataTransfer.getData('text/html');
+					ZollerGlobal.Set.Handlers();
+				}
+
+				return false;
+			});
+			ZollerGlobal.Set.Handler(".assembly-item", "dragend", function(e){
+				// this/e.target is the source node.
+				var cols = document.querySelectorAll('.assembly-item');
+				[].forEach.call(cols, function (col) {
+					col.classList.remove('over');
+					col.style.opacity = "1";
+				});
+			});
+			
+			// Delete events
+			ZollerGlobal.Set.Handler(".assembly-name > .delete", "click", function(e){
+				ZollerGlobal.Raise.Tool.Delete(e.target.parentElement.dataset.tool, e.target);
+				e.stopImmediatePropagation();
+				e.preventDefault();
+			});
+			ZollerGlobal.Set.Handler(".assembly-item > .delete", "click", function(e){
+				ZollerGlobal.Raise.Component.Delete(e.target.parentElement.dataset.component, e.target.parentElement.dataset.tool, e.target);
+				e.stopImmediatePropagation();
+				e.preventDefault();
+			});
+			ZollerGlobal.Set.Handler(".fixture-name > .delete", "click", function(e){
+				ZollerGlobal.Raise.Fixture.Delete(e.target.parentElement.parentElement.dataset.fixture, e.target);
+				e.stopImmediatePropagation();
+				e.preventDefault();
+			});
+			ZollerGlobal.Set.Handler("li.fixture > div > .delete", "click", function(e){
+				ZollerGlobal.Raise.Fixture.Delete(e.target.parentElement.parentElement.dataset.fixture, e.target);
+				e.stopImmediatePropagation();
+				e.preventDefault();
+			});
+			ZollerGlobal.Set.Handler(".measure-name > .delete", "click", function(e){
+				ZollerGlobal.Raise.MeasuringDeviceV2.Delete(e.target.parentElement.parentElement.dataset.measure, e.target);
+				e.stopImmediatePropagation();
+				e.preventDefault();
+			});
+			ZollerGlobal.Set.Handler(".accessory-name > .delete", "click", function(e){
+				ZollerGlobal.Raise.Accessory.Delete(e.target.parentElement.parentElement.dataset.accessory, e.target);
+				e.stopImmediatePropagation();
+				e.preventDefault();
+			});
+			
+			// Add component
+			ZollerGlobal.Set.Handler(".add-component","click",function (e) {
+				ZollerGlobal.Raise.Component.AddToTool(e.target.parentElement.dataset.tool, e.target)
+				e.stopImmediatePropagation();
+				e.preventDefault();
+			});
+			
+			// Flip button events
+			ZollerGlobal.Set.Handler(".assembly-name > .accessorycount > .flip-item", "click", function (e) {
+				var blnGood = false;
+				if (e.target.getAttribute("class") === null || e.target.getAttribute("class").indexOf("flip-item") > -1){
+					blnGood = true;
+				}
+				if (blnGood){
+					var parAss = e.target.parentElement.parentElement.parentElement; // Get Fixture container
+					var subAccDiv = parAss.querySelector(".accessory-sub"); // Get Accessory-Sub container
+					if (_Verbose){
+						console.log("Assembly Height: ",parAss.clientHeight);
+						console.log("\tAccessory Height: ",subAccDiv.clientHeight);
+					}
+					var closing = subAccDiv.classList.contains("show"); // Check sub-container visibility
+					subAccDiv.classList.toggle("show"); // Show/Hide the Accessory-Sub container
+					if (_Verbose){console.log("\t\tAccessory Height: ",subAccDiv.clientHeight)}
+					var count = subAccDiv.querySelectorAll(".accessory").length; // Number of accessory items in the sub-container
+					if ((subAccDiv.clientHeight) == 0 && parAss.querySelector(".show") == null) {
+						parAss.style.removeProperty("height");
+					} else {
+						parAss.style.height = "calc(var(--sizeHeight) + " + (subAccDiv.clientHeight) + "px)";
+					}
+					e.target.classList.toggle("flipped");
+					e.stopImmediatePropagation();
+					e.preventDefault();
+				}
+			});
+			ZollerGlobal.Set.Handler(".fixture-name > .childcount > .flip-item", "click", function (e) {
+				var blnGood = false;
+				if (e.target.getAttribute("class") === null || e.target.getAttribute("class").indexOf("flip-item") > -1){
+					blnGood = true;
+				}
+				if (blnGood){
+					var parFixt = e.target.parentElement.parentElement.parentElement;
+					var subAccDiv = parFixt.querySelector(".accessory-sub");
+					var subFixtDiv = parFixt.querySelector(".fixture-sub");
+					if (_Verbose){
+						console.log("Fixture Height: ",parFixt.clientHeight);
+						console.log("\tSub-Fixture Height: ",subFixtDiv.clientHeight);
+						console.log("\tAccessory Height: ",subAccDiv.clientHeight);
+					}
+					var closing = subFixtDiv.classList.contains("show");
+					subFixtDiv.classList.toggle("show");
+					if (_Verbose){console.log("\t\tSub-Fixture Height: ",subFixtDiv.clientHeight);}
+					var count = subFixtDiv.querySelectorAll(".fixture").length;
+					var totHeight = 0;
+					if (subAccDiv != undefined){
+						totHeight = subFixtDiv.clientHeight + subAccDiv.clientHeight;
+					}else{
+						totHeight = subFixtDiv.clientHeight;
+					}
+					if (totHeight == 0 && parFixt.querySelector(".show") == null) {
+						parFixt.style.removeProperty("height");
+					} else {
+						parFixt.style.height = "calc(var(--sizeHeight) + " + totHeight + "px)";
+					}
+					e.target.classList.toggle("flipped");
+					e.stopImmediatePropagation();
+					e.preventDefault();
+				}
+			});
+			ZollerGlobal.Set.Handler(".fixture-name > .accessorycount > .flip-item", "click", function (e) {
+				var blnGood = false;
+				if (e.target.getAttribute("class") === null || e.target.getAttribute("class").indexOf("flip-item") > -1){
+					blnGood = true;
+				}
+				if (blnGood){
+					var parFixt = e.target.parentElement.parentElement.parentElement; // Get Fixture container
+					var subAccDiv = parFixt.querySelector(".accessory-sub"); // Get Accessory-Sub container
+					var subFixtDiv = parFixt.querySelector(".fixture-sub"); // Get Fixture-Sub container
+					if (_Verbose){
+						console.log("Fixture Height: ",parFixt.clientHeight);
+						console.log("\tSub-Fixture Height: ",subFixtDiv.clientHeight);
+						console.log("\tAccessory Height: ",subAccDiv.clientHeight);
+					}
+					var closing = subAccDiv.classList.contains("show"); // Check sub-container visibility
+					subAccDiv.classList.toggle("show"); // Show/Hide the Accessory-Sub container
+					if (_Verbose){console.log("\t\tAccessory Height: ",subAccDiv.clientHeight)}
+					var count = subAccDiv.querySelectorAll(".accessory").length; // Number of accessory items in the sub-container
+					var totHeight = 0;
+					if (subFixtDiv != undefined){
+						totHeight = subFixtDiv.clientHeight + subAccDiv.clientHeight;
+					}else{
+						totHeight = subAccDiv.clientHeight;
+					}
+					if (totHeight == 0 && parFixt.querySelector(".show") == null) {
+						parFixt.style.removeProperty("height");
+					} else {
+						parFixt.style.height = "calc(var(--sizeHeight) + " + totHeight + "px)";
+					}
+					e.target.classList.toggle("flipped");
+					e.stopImmediatePropagation();
+					e.preventDefault();
+				}
+			});
+			ZollerGlobal.Set.Handler(".measure-name > .accessorycount > .flip-item", "click", function (e) {
+				var blnGood = false;
+				if (e.target.getAttribute("class") === null || e.target.getAttribute("class").indexOf("flip-item") > -1){
+					blnGood = true;
+				}
+				if (blnGood){
+					var parMeas = e.target.parentElement.parentElement.parentElement;
+					var subAccDiv = parMeas.querySelector(".accessory-sub");
+					var closing = subAccDiv.classList.contains("show");
+					subAccDiv.classList.toggle("show");
+					if (parMeas.style.getPropertyValue("height") != "" && parMeas.querySelector(".show") == null) {
+						parMeas.style.removeProperty("height");
+					} else {
+						//parFixt.style.height = "auto";
+						if (closing) {
+							parMeas.style.height = "calc(" + parMeas.clientHeight + "px - var(--sizeHeight))";
+						} else {
+							parMeas.style.height = "calc(var(--sizeHeight) + " + parMeas.clientHeight + "px + 15px)";
+						}
+					}
+					e.target.classList.toggle("flipped");
+					e.stopImmediatePropagation();
+					e.preventDefault();
+				}
+			});
+		},
+		Handler: function(query, onevent, callback){
+			var cols = document.querySelectorAll(query);
+			for (var len = cols.length, n = 0; n < len; n++){
+				cols[n].addEventListener(onevent, callback, false);
+			}
+		},
+		EditState: function(state){
+			var els = document.querySelectorAll(".delete");
+			[].forEach.call(els, function (el) {
+				el.classList.toggle("noEdit", !state);
+			});
+			els = document.querySelectorAll(".add-component");
+			[].forEach.call(els, function (el) {
+				el.classList.toggle("noEdit", !state);
+			});
+		}
+	},
+	Raise: {
+		Accessory: {
+			Delete: function(Accessory, el){
+				var evt = document.createEvent("Events");
+				evt.initEvent("accessorydelete", true, true);
+				evt.AccessoryId = Accessory;
+				el.dispatchEvent(evt);
+			},
+			Selected: function(Accessory, el){
+				var evt = document.createEvent("Events");
+				evt.initEvent("accessoryselected", true, true);
+				evt.AccessoryId = Accessory;
+				el.dispatchEvent(evt);
+			}
+		},
+		MeasuringDeviceV2: {
+			Delete: function(Measuring, el){
+				var evt = document.createEvent("Events");
+				evt.initEvent("measuredelete", true, true);
+				evt.MeasuringDeviceId = Measuring;
+				el.dispatchEvent(evt);
+			},
+			Selected: function(Measuring, el){
+				var evt = document.createEvent("Events");
+				evt.initEvent("measureselected", true, true);
+				evt.MeasuringDeviceId = Measuring;
+				el.dispatchEvent(evt);
+			}
+		},
+		Fixture: {
+			Delete: function(Fixture, el){
+				var evt = document.createEvent("Events");
+				evt.initEvent("fixturedelete", true, true);
+				evt.FixtureId = Fixture;
+				el.dispatchEvent(evt);
+			},
+			Selected: function(Fixture, el){
+				var evt = document.createEvent("Events");
+				evt.initEvent("fixtureselected", true, true);
+				evt.FixtureId = Fixture;
+				el.dispatchEvent(evt);
+			}
+		},
+		Tool: {
+			Delete: function(Tool, el){
+				var evt = document.createEvent("Events");
+				evt.initEvent("tooldelete", true, true);
+				evt.ToolId = Tool;
+				el.dispatchEvent(evt);
+			},
+			Edit: function(Tool, el){
+				var evt = document.createEvent("Events");
+				evt.initEvent("tooledit", true, true);
+				evt.ToolId = Tool;
+				el.dispatchEvent(evt);
+			},
+			Selected: function(Tool, el){
+				var evt = document.createEvent("Events");
+				evt.initEvent("toolselected", true, true);
+				evt.ToolId = Tool;
+				el.dispatchEvent(evt);
+			}
+		},
+		Component: {
+			Delete: function(Component, Tool, el){
+				var evt = document.createEvent("Events");
+				evt.initEvent("componentdelete", true, true);
+				evt.ComponentId = Component;
+				evt.ToolId = Tool;
+				el.dispatchEvent(evt);
+			},
+			AddToTool: function(Tool, el){
+				var evt = document.createEvent("Events");
+				evt.initEvent("componentadd", true, true);
+				evt.ToolId = Tool;
+				el.dispatchEvent(evt);
+			},
+			Selected: function(Component, Tool, el){
+				var evt = document.createEvent("Events");
+				evt.initEvent("componentselected", true, true);
+				evt.ToolId = Tool;
+				evt.ComponentId = Component;
+				el.dispatchEvent(evt);
+			}
+		}
 	}
 }
+ZollerGlobal.ServiceInstance = new ZollerServiceInstance();
+ZollerGlobal.DocumentList = new ZollerDocumentList();
+
+// Prototype addition to Date to get RFC 2616
+Date.prototype.getRFC2616 = function(){
+	var daysOfWeek = ["Sun","Mon","Tues","Wed","Thurs","Fri","Sat"];
+	var monthsOfYear = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sept","Oct","Nov","Dec"];
+	
+	var d = new Date();
+	var strD = daysOfWeek[d.getDay()] + ", " + d.getDate() + " " + monthsOfYear[d.getMonth()] + " " + d.getFullYear() + " " + d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds() + " GMT";
+	return strD
+}
+
+// **************************************************************************
+// *********Hash Coding from https://gist.github.com/macton/1743087*********
+// **************************************************************************
+function hex_sha1(a){return rstr2hex(rstr_sha1(str2rstr_utf8(a)))}function b64_sha1(a){return rstr2b64(rstr_sha1(str2rstr_utf8(a)))}function any_sha1(a,b){return rstr2any(rstr_sha1(str2rstr_utf8(a)),b)}function hex_hmac_sha1(a,b){return rstr2hex(rstr_hmac_sha1(str2rstr_utf8(a),str2rstr_utf8(b)))}function b64_hmac_sha1(a,b){return rstr2b64(rstr_hmac_sha1(str2rstr_utf8(a),str2rstr_utf8(b)))}function any_hmac_sha1(a,b,c){return rstr2any(rstr_hmac_sha1(str2rstr_utf8(a),str2rstr_utf8(b)),c)}function sha1_vm_test(){return"a9993e364706816aba3e25717850c26c9cd0d89d"==hex_sha1("abc")}function rstr_sha1(a){return binb2rstr(binb_sha1(rstr2binb(a),8*a.length))}function rstr_hmac_sha1(a,b){var c=rstr2binb(a);c.length>16&&(c=binb_sha1(c,8*a.length));for(var d=Array(16),e=Array(16),f=0;f<16;f++)d[f]=909522486^c[f],e[f]=1549556828^c[f];var g=binb_sha1(d.concat(rstr2binb(b)),512+8*b.length);return binb2rstr(binb_sha1(e.concat(g),672))}function rstr2hex(a){for(var d,b=hexcase?"0123456789ABCDEF":"0123456789abcdef",c="",e=0;e<a.length;e++)d=a.charCodeAt(e),c+=b.charAt(d>>>4&15)+b.charAt(15&d);return c}function rstr2b64(a){for(var b="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",c="",d=a.length,e=0;e<d;e+=3)for(var f=a.charCodeAt(e)<<16|(e+1<d?a.charCodeAt(e+1)<<8:0)|(e+2<d?a.charCodeAt(e+2):0),g=0;g<4;g++)c+=8*e+6*g>8*a.length?b64pad:b.charAt(f>>>6*(3-g)&63);return c}function rstr2any(a,b){var e,f,g,h,c=b.length,d=Array(),i=Array(Math.ceil(a.length/2));for(e=0;e<i.length;e++)i[e]=a.charCodeAt(2*e)<<8|a.charCodeAt(2*e+1);for(;i.length>0;){for(h=Array(),g=0,e=0;e<i.length;e++)g=(g<<16)+i[e],f=Math.floor(g/c),g-=f*c,(h.length>0||f>0)&&(h[h.length]=f);d[d.length]=g,i=h}var j="";for(e=d.length-1;e>=0;e--)j+=b.charAt(d[e]);var k=Math.ceil(8*a.length/(Math.log(b.length)/Math.log(2)));for(e=j.length;e<k;e++)j=b[0]+j;return j}function str2rstr_utf8(a){for(var d,e,b="",c=-1;++c<a.length;)d=a.charCodeAt(c),e=c+1<a.length?a.charCodeAt(c+1):0,55296<=d&&d<=56319&&56320<=e&&e<=57343&&(d=65536+((1023&d)<<10)+(1023&e),c++),d<=127?b+=String.fromCharCode(d):d<=2047?b+=String.fromCharCode(192|d>>>6&31,128|63&d):d<=65535?b+=String.fromCharCode(224|d>>>12&15,128|d>>>6&63,128|63&d):d<=2097151&&(b+=String.fromCharCode(240|d>>>18&7,128|d>>>12&63,128|d>>>6&63,128|63&d));return b}function str2rstr_utf16le(a){for(var b="",c=0;c<a.length;c++)b+=String.fromCharCode(255&a.charCodeAt(c),a.charCodeAt(c)>>>8&255);return b}function str2rstr_utf16be(a){for(var b="",c=0;c<a.length;c++)b+=String.fromCharCode(a.charCodeAt(c)>>>8&255,255&a.charCodeAt(c));return b}function rstr2binb(a){for(var b=Array(a.length>>2),c=0;c<b.length;c++)b[c]=0;for(var c=0;c<8*a.length;c+=8)b[c>>5]|=(255&a.charCodeAt(c/8))<<24-c%32;return b}function binb2rstr(a){for(var b="",c=0;c<32*a.length;c+=8)b+=String.fromCharCode(a[c>>5]>>>24-c%32&255);return b}function binb_sha1(a,b){a[b>>5]|=128<<24-b%32,a[(b+64>>9<<4)+15]=b;for(var c=Array(80),d=1732584193,e=-271733879,f=-1732584194,g=271733878,h=-1009589776,i=0;i<a.length;i+=16){for(var j=d,k=e,l=f,m=g,n=h,o=0;o<80;o++){o<16?c[o]=a[i+o]:c[o]=bit_rol(c[o-3]^c[o-8]^c[o-14]^c[o-16],1);var p=safe_add(safe_add(bit_rol(d,5),sha1_ft(o,e,f,g)),safe_add(safe_add(h,c[o]),sha1_kt(o)));h=g,g=f,f=bit_rol(e,30),e=d,d=p}d=safe_add(d,j),e=safe_add(e,k),f=safe_add(f,l),g=safe_add(g,m),h=safe_add(h,n)}return Array(d,e,f,g,h)}function sha1_ft(a,b,c,d){return a<20?b&c|~b&d:a<40?b^c^d:a<60?b&c|b&d|c&d:b^c^d}function sha1_kt(a){return a<20?1518500249:a<40?1859775393:a<60?-1894007588:-899497514}function safe_add(a,b){var c=(65535&a)+(65535&b),d=(a>>16)+(b>>16)+(c>>16);return d<<16|65535&c}function bit_rol(a,b){return a<<b|a>>>32-b}var hexcase=0,b64pad="=";
