@@ -24,12 +24,13 @@
 //     Service. The raw XML is used to fill the properties of the object. 
 //
 // **************************************************************************
+var _Verbose = false;
 
-function ZollerObject(type, id){
+function ZollerObject(type, id, global){
 	if ((typeof ZollerType[type]) !== "undefined"){
 		this.Type = ZollerType[type];
 	}else{
-		if (_Verbose){console.log("Couldn't define Object type from '" + type + "'");}
+		if (_Verbose){console.log("[ZollerObject.ctor] Couldn't define Object type from:", type);}
 	}
 	// Object Properties
 	this.isNull = true;
@@ -40,21 +41,25 @@ function ZollerObject(type, id){
 
 	// Setup ZollerProperties regardless of validity in Zoller to ensure properties are available
 	if ((typeof this.Type) !== "undefined"){
-		this.Type.Properties.forEach(prop => {
-			this.ZollerProperties[prop.Name] = null;
-		});
+		for(var len=this.Type.Properties.length,n=0;n<len;n++){
+			this.ZollerProperties[this.Type.Properties[n].Name] = null;
+		}
 		this.GlobalReference = this.Type.Name;
+	}
+	if ((typeof global) !== "undefined" && global !== null){
+		this.GlobalReference = global;
 	}
 	
 	this.Initialize = (function(){
 		if ((typeof this.Type) === "undefined"){return this;}
-		if (_Verbose){console.log("Initializing " + this.Type.Name + ": ", this)}
+		if (_Verbose){console.log("[ZollerObject.Initialize] Initializing " + this.Type.Name + ": ", this)}
 		
 		if ((typeof this.XML) !== "undefined"){
 			var node = getNodeByTagName(this.XML, this.Type.Name, this.Type.Name + ".");
-			if ((typeof node) !== "undefined"){
+			if ((typeof node) !== "undefined" && node.childNodes.length > 0){
 				// Iterate through all nodes, so you can capture AdditionalData fields
-				for (var len = node.childNodes.length, n = 0; n < len; n++){
+				var tmpNewObject;
+				for (var len=node.childNodes.length,n=0;n<len;n++){
 					if (node.childNodes[n].nodeName != "#text"){
 						if (node.childNodes[n].nodeName.indexOf("GraphicFile") >= 0){
 							this.Images.push(new ZollerGraphicImage(node.childNodes[n].textContent, getValue(node, node.childNodes[n].nodeName.replace("File", "Group"))));
@@ -63,8 +68,13 @@ function ZollerObject(type, id){
 						}else if (ContainsProperty(this.Type, node.childNodes[n].nodeName)){
 							this.ZollerProperties[node.childNodes[n].nodeName] = node.childNodes[n].textContent;
 						}else if(this.Type.SubTypes.indexOf(node.childNodes[n].nodeName) >= 0){
-							this[node.childNodes[n].nodeName] = new ZollerObject(node.childNodes[n].nodeName, node.childNodes[n]);
-							this[node.childNodes[n].nodeName]["GlobalReference"] = this.GlobalReference + "['" + this[node.childNodes[n].nodeName].Type.Name + "']";
+							tmpNewObject = new ZollerObject(node.childNodes[n].nodeName, node.childNodes[n],this.GlobalReference + "['" + node.childNodes[n].nodeName + "']");//this[node.childNodes[n].nodeName].Type.Name + "']");
+							if (!tmpNewObject.isNull){
+								this[node.childNodes[n].nodeName] = tmpNewObject;
+							}else if(_Verbose){
+								console.log("\t[ZollerObject.Initialize] Not adding SubType '" + node.childNodes[n].nodeName + "' because it initialized as null.");
+							}
+							//this[node.childNodes[n].nodeName]["GlobalReference"] = this.GlobalReference + "['" + this[node.childNodes[n].nodeName].Type.Name + "']";
 						}else if(ContainsEnum(this.Type, node.childNodes[n].nodeName)){
 							var enm = GetEnum(this.Type, node.childNodes[n].nodeName);
 							var enmn = getNodes(node.childNodes[n], ZollerType[enm.Name].Name + "InList"); // Get all object nodes
@@ -72,12 +82,16 @@ function ZollerObject(type, id){
 								this[enm.Name + "List"] = new Array();
 								for (var enlen = enmn.length, en = 0; en < enlen; en++){
 									// Iterate through Node Object references
-									var nwEnumObj = new ZollerObject(enm.Name, enmn[en]);
-									nwEnumObj["GlobalReference"] = this.GlobalReference + "['" + nwEnumObj.Type.Name + "List'][" + en + "]";
+									var nwEnumObj = new ZollerObject(enm.Name, enmn[en], this.GlobalReference + "['" + enm.Name + "List'][" + en + "]");
+									//nwEnumObj["GlobalReference"] = this.GlobalReference + "['" + nwEnumObj.Type.Name + "List'][" + en + "]";
 									for (var enplen = enm.Properties.length, enp = 0; enp < enplen; enp++){
 										nwEnumObj.ZollerProperties[enm.Properties[enp].Name] = getValue(enmn[en], enm.Properties[enp].Name);
 									}
-									this[enm.Name + "List"].push(nwEnumObj);
+									if (!nwEnumObj.isNull){
+										this[enm.Name + "List"].push(nwEnumObj);
+									}else if (_Verbose){
+										console.log("\t[ZollerObject.Initialize] Not adding Enumerable '" + enm.Name + "' because it initialized as null.");
+									}
 								}
 							}
 						}else{ // Assumed AdditionalData
@@ -94,16 +108,16 @@ function ZollerObject(type, id){
 		}else{
 			this.isNull = true;
 		}
-		this.Type.SubTypes.forEach(subType => {
-			if ((typeof this[subType]) === "undefined"){
-				this[subType] = new ZollerObject(subType, "");// Create empty Reference
+		for(var len=this.Type.SubTypes.length,n=0;n<len;n++){
+			if ((typeof this[this.Type.SubTypes[n]]) === "undefined"){
+				//this[this.Type.SubTypes[n]] = new ZollerObject(this.Type.SubTypes[n], ""); // Create empty reference
 			}
-		});
-		this.Type.EnumerableTypes.forEach(enmType => {
-			if ((typeof this[enmType.Name + "List"]) === "undefined"){
-				this[enmType.Name + "List"] = new Array();
+		}
+		for(var len=this.Type.EnumerableTypes.length,n=0;n<len;n++){
+			if((typeof this[this.Type.EnumerableTypes[n].Name + "List"]) === "undefined"){
+				this[this.Type.EnumerableTypes[n].Name + "List"] = new Array();
 			}
-		});
+		}
 		return this;
 	}).bind(this);
 	
@@ -213,7 +227,7 @@ function ZollerObject(type, id){
 				}
 				return true;
 			}else{
-				console.log("No nodes returned");
+				console.log("[ZollerObject.RemoveChild] No nodes returned");
 			}
 		}
 		return false;
@@ -251,7 +265,7 @@ function ZollerObject(type, id){
 				var nProps = new Array();
 				for (var len = enm.Properties.length, n = 0; n < len; n++){
 					var propName = enm.Properties[n].Name;
-					console.log("Trying to add Enumerable Property[" + propName + "]: ", enm.Properties[n]);
+					console.log("[ZollerObject.AddChild] Trying to add Enumerable Property[" + propName + "]: ", enm.Properties[n]);
 					nProps.push(xmlDoc.createElement(propName));
 					if (obj.ZollerProperties[propName] != undefined && obj.ZollerProperties[propName] != null && obj.ZollerProperties[propName] != ""){
 						//var prpNod = xmlDoc.createElement(propName);
@@ -263,24 +277,24 @@ function ZollerObject(type, id){
 						console.log("\tProperty was empty or null...", obj.ZollerProperties[propName]);
 					}
 				}
-				console.log("Enumerable Property Nodes: ", nProps);
+				console.log("[ZollerObject.AddChild] Enumerable Property Nodes: ", nProps);
 				// Add new object's XML structure
 				var objNod = getNodeByTagName(obj.XML, obj.Type.Name);
 				inlstNod.appendChild(objNod);
 				lstNod.appendChild(inlstNod);
 				return lstNod;
 			}else{
-				console.log("Could not find EnumerableType for '" + obj.Type.Name + "' in: ", this.Type);
+				console.log("[ZollerObject.AddChild] Could not find EnumerableType for '" + obj.Type.Name + "' in: ", this.Type);
 			}
 		}else{
-			console.log("Object is either undefined or it's type is undefined");
+			console.log("[ZollerObject.AddChild] Object is either undefined or it's type is undefined");
 		}
 		return undefined;
 	}).bind(this);
 	
   this.XML = undefined;
   this.SetXML = (function (xml) {
-		if (_Verbose){console.log("Setting XML: ",this)}
+		if (_Verbose){console.log("[ZollerObject.SetXML] Setting XML: ",this)}
 		this.XML = xml;
 		return this.Initialize();
   }).bind(this);
@@ -290,7 +304,7 @@ function ZollerObject(type, id){
   } else if ((typeof id) == "object") {
     return this.SetXML(id);
   } else {
-    console.log("Invalid object type!");
+    console.log("[ZollerObject.SetXML] Invalid object type!");
 		this.isNull = true;
   }
 		
@@ -1594,7 +1608,7 @@ function ZollerTool(id) {
 	this.AdditionalData = {};
 
 	this.Initialize = function(){
-		if (_Verbose){console.log("Initializing Tool: ", this)}
+		if (_Verbose){console.log("[ZollerTool.Initialize] Initializing Tool: ", this)}
 		if (!this.isNull){return this}
 		if (this.XML == undefined){this.isNull = true;return undefined} // Cannot initialize without xml
 		var node = getNodeByTagName(this.XML, "Tool", "Tool.");
@@ -1617,7 +1631,7 @@ function ZollerTool(id) {
 						this.SingleComponents[this.SingleComponents.length-1].IsTrueZoller = true;
 					}
 				} else {
-					console.log("No components found in Article Data");
+					console.log("[ZollerTool.Initialize] No components found in Article Data");
 				}
 				cmpnts = getNodes(node.children[n], "Accessory", "Tool.");
 				if (cmpnts != undefined) {
@@ -1625,7 +1639,7 @@ function ZollerTool(id) {
 						this.Accessories.push(new ZollerAccessory(cmpnts[i]));// Send XML structure. Only captured using LoadSubData query.
 					}
 				} else {
-					console.log("No accessories found in Article Data");
+					console.log("[ZollerTool.Initialize] No accessories found in Article Data");
 				}
 			}else if (node.children[n].tagName.indexOf("ExternalDocument") >= 0) {// Get Documents of the Tool
 				var cmpnts = getNodes(node.children[n], "Document", "Tool.");
@@ -1634,7 +1648,7 @@ function ZollerTool(id) {
 						this.Documents.push(new ZollerDocument(cmpnts[i]));// Send XML structure. Only captured using LoadSubData query.
 					}
 				} else {
-					console.log("No documents found in ExternalDocument Data");
+					console.log("[ZollerTool.Initialize] No documents found in ExternalDocument Data");
 				}
 			}else{
 				var blnGraphicsFound = false;
@@ -3070,15 +3084,22 @@ function ZollerGraphicImage(file, group) {
 		img.setAttribute("style", "object-fit: contain;");
 		return img;
 	}
-  this.Image = this.CreateImage();
+  // this.Image = (function(){
+		// if (this._Image === null){
+			// this._Image = this.CreateImage();
+		// }
+		// return this._Image;
+	// }).bind(this);//this.CreateImage();
+	// this._Image = null;
   this.GetCustomImageURL = function (width, height) {
     if (this.GraphicGroup && this.FileName && this.GraphicGroup !== "" && this.FileName !== "") {
       return ZollerGlobal.WebServiceBaseURL + "Graphic/" + this.GraphicGroup + "/" + this.FileName + "?w=" + width + "&h=" + height;
     } else {
       return ""
     }
-
   }
+	
+	return this;
 }
 
 function ZollerServiceInstance(){
@@ -3567,17 +3588,17 @@ ZollerGlobal = {
 			xhr.open("POST", ZollerGlobal.RequestBaseURL, async);
 
 			xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-			if (_Verbose){console.log("Content Length: ", data.length)}
+			if (_Verbose && data !== null && (typeof data) !== "undefined"){console.log("Content Length: ", data.length)}
 			xhr.onprogress = function (e) {
 				if (_Verbose){
 					var done = e.position || e.loaded, total = e.totalSize || e.total;
-					console.log("XHR Progress: " + (Math.floor(done / total * 1000) / 10) + '%');
+					console.log("[ZollerGlobal.Request.FromProxy] XHR Progress: " + (Math.floor(done / total * 1000) / 10) + '%');
 				}
 			}
 			if (xhr.upload && _Verbose) {
 				xhr.upload.onprogress = function (e) {
 					var done = e.position || e.loaded, total = e.totalSize || e.total;
-					console.log("XHR Upload Progress: " + (Math.floor(done / total * 1000) / 10) + '%');
+					console.log("[ZollerGlobal.Request.FromProxy] XHR Upload Progress: " + (Math.floor(done / total * 1000) / 10) + '%');
 				}
 			}
 			xhr.onreadystatechange = function () {
@@ -3589,7 +3610,7 @@ ZollerGlobal = {
 								if (xhr.responseXML.firstChild !== null && xhr.responseXML.firstChild.hasAttribute !== null) {
 									if (xhr.responseXML.firstChild.hasAttribute("result")) {
 										if (xhr.responseXML.firstChild.getAttribute("result") === "fail") {
-											console.log("Invalid response from TMS!");
+											console.log("[ZollerGlobal.Request.FromProxy] Invalid response from TMS!");
 											callback.call(self, null);
 											return null;
 										}

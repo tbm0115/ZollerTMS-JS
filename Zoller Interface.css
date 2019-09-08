@@ -118,7 +118,7 @@
 .assembly{
 	position: relative;
 	width: 100%;
-	height: var(--sizeHeight);
+	height: calc(var(--sizeHeight) + 15px);
 	border-left: 1px outset black;
 	border-right: 1px outset black;
 	display: block;
@@ -324,6 +324,16 @@
 }
 .assembly-item img[src=''],.assembly-item img[src='undefined']{
 	display: none;
+}
+.assembly-item .autocrib{
+	position: absolute;
+	display: block;
+	width: 16px;
+	height: 16px;
+	background-image: url("http://www.autocrib.com/favicon.ico");
+	background-size: 16px 16px;
+	right: 16px;
+	top: 50%;
 }
 
 .add-component{
@@ -555,7 +565,7 @@
 }
 
 .fixture-details{
-	overflow: hidden;
+	overflow-y: auto;
 }
 
 .fixture-sub{
@@ -917,4 +927,8 @@ li.fixture > div > .delete{
 }
 .measure-sub > .measure > .measure-item{
 	display: none;
+}
+
+.graphic{
+	object-fit: contain;
 }
