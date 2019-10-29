@@ -2,7 +2,10 @@
 TODO: Add Description
 
 ## Properties
- - (*propertyType*) **PropertyName**: Description
+| Name | Type | Description |
+| --- | --- | --- |
+
 
 ## Methods
- - (*returnType*) **MethodName**(*parameterType* **ParameterName**): Description
+| Name | Return Type | Parameters | Description |
+| --- | --- | --- | --- |
