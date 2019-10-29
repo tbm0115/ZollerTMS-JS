@@ -1,11 +1,9 @@
 # ZollerMachine
-{:toc}
 TODO: Add Description
 
 ## Properties
-{:toc}
 | Name | Type | Description |
-| ---- | ---- | ---- |
+|----|----|----|
 | MachineId | string | Description |
 | Name | string | Description |
 | Description | string | Description |
@@ -36,5 +34,4 @@ TODO: Add Description
 | Manufacturer | string | Description |
 
 ## Methods
-{:toc}
 N/A
