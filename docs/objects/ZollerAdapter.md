@@ -2,6 +2,8 @@
 TODO: Add Description
 
 ## Properties
+
+
 | Name | Type | Description |
 | --- | --- | --- |
 | AdapterId | string | Description |
