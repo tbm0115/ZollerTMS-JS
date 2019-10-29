@@ -4,7 +4,3 @@ collections_dir:
     output: true
     permalink: /objects/:name
 heading_anchors: true
-aux_links: 
-  "ZollerTMS-JS":
-   - "//traismcallister.me/ZollerTMS-JS/"
-   - "//traismcallister.me/ZollerTMS-JS/objects"
