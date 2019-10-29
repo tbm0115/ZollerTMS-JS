@@ -4,7 +4,7 @@ These are object types that are available in the Zoller Tool Management System W
 | Object Name | Page | Status |
 | --- | --- | --- |
 | ZollerAdapter | [View](https://traismcallister.me/ZollerTMS-JS/objects/ZollerAdapter) | N/A |
-| ZollerMachine | [Create Page](https://github.com/tbm0115/ZollerTMS-JS/new/master/docs/objects?filename=objects/ZollerMachine.md) | N/A |
+| ZollerMachine | [View](https://traismcallister.me/ZollerTMS-JS/objects/ZollerMachine) | N/A |
 | ZollerSettingSheet | [Create Page](https://github.com/tbm0115/ZollerTMS-JS/new/master/docs/objects?filename=objects/ZollerSettingSheet.md) | N/A |
 | ZollerTool | [Create Page](https://github.com/tbm0115/ZollerTMS-JS/new/master/docs/objects?filename=objects/ZollerTool.md) | N/A |
 | ZollerSingleComponent | [Create Page](https://github.com/tbm0115/ZollerTMS-JS/new/master/docs/objects?filename=objects/ZollerSingleComponent.md) | N/A |
