@@ -2,14 +2,16 @@
 TODO: Add Description
 
 ## Properties
- - (*string*) **AdapterId**: Description
- - (*string*) **Name**: Description
- - (*ZollerGraphicImage[]*) **Images**: Description
- - (*object[]*) **CustomProperties**: Description
- - (*XMLDom*) **XML**: Description
- - (*bool*) **IsTrueZoller**: Description
- - (*string*) **AdapterPresetter**: Description
- - (*bool*) **isNull**: Description
+| Name | Type | Description |
+| --- | --- | --- |
+| AdapterId | string | Description |
+| Name | string | Description |
+| Images | ZollerGraphicImage[] | Description |
+| CustomProperties | object[] | Description |
+| XML | XMLDom | Description |
+| IsTrueZoller | bool | Description |
+| AdapterPresetter | string | Description |
+| isNull | bool | Description |
 
 ## Methods
 N/A
