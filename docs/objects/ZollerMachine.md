@@ -3,7 +3,7 @@ TODO: Add Description
 
 ## Properties
 | Name | Type | Description |
-| --- | --- | --- |
+| ---- | ---- | ---- |
 | MachineId | string | Description |
 | Name | string | Description |
 | Description | string | Description |
