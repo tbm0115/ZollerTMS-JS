@@ -1,0 +1,41 @@
+{
+    "name": "@tbm0115/zollertms.js",
+    "description": "A JavaScript library for managing Zoller TMS resources in the browser.",
+    "homepage": "https://github.com/tbm0115/ZollerTMS-JS",
+    "author": {
+        "name": "Trais McAllister",
+        "url": "https://traismcallister.me"
+    },
+    "contributors": [
+        {
+            "name": "Trais McAllister",
+            "url": "https://github.com/tbm0115"
+        }
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/tbm0115/ZollerTMS-JS.git"
+    },
+    "bugs": {
+        "url": "https://github.com/tbm0115/ZollerTMS-JS/issues"
+    },
+    "keywords": [
+        "console",
+        "consoul",
+        "styling",
+        "pretty"
+    ],
+    "license": "LGPL-3.0-only",
+    "main": "dist/js/Zoller Interface.min.js",
+    "style": "dist/css/consoul.css",
+    "files": [
+        "src",
+        "dist"
+    ],
+    "version": "0.0.1",
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com/"
+    },
+    "devDependencies": {},
+    "dependencies": {}
+}
