@@ -1,0 +1,6 @@
+theme: jekyll-theme-minimal
+collections_dir: 
+  objects:
+    output: true
+    permalink: /objects/:name
+heading_anchors: true
